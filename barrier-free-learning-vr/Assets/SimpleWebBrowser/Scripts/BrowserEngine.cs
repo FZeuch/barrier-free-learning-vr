@@ -536,7 +536,7 @@ namespace SimpleWebBrowser
             foreach (KeyCode k in _keymap)
                 CheckKey(k);
         }
-        private void CheckKey(KeyCode code) {
+        public void CheckKey(KeyCode code) {
             if (Input.GetKeyDown(code))
                 SendCharEvent((int) code, KeyboardEventType.Down);
             else if (Input.GetKeyUp(code))

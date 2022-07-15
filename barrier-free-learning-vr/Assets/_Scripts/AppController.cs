@@ -1,39 +1,63 @@
 using UnityEngine;
 using FreeHandGestureFramework.EnumsAndTypes;
 using FreeHandGestureUnity;
+using FreeHandGestureUnity.OculusQuest;
 using SimpleWebBrowser;
+using System;
 
 public class AppController : MonoBehaviour
 {
+    private const int MAX_PAGE_TURNS_PER_SECOND = 15;
+    public OVRSkeleton LeftSkeleton, RightSkeleton;
+    public GameObject Cam;
     public GameObject Star;
     public GameObject Reader;
     public WebBrowser Browser;
     private int _currentPage=1;
-    private string PDFfilename = "PDF/K10m.pdf";
-
+    private string _pdfFilename = "PDF/K10m.pdf";
+    private DateTime _timeOfLastPageTurn;
+    private FreeHandRuntimeU Fhr;
     void Awake()
     {
         SetBackgroundStars();
-        Browser.InitialURL=GetPdfUrl(PDFfilename,1);
-        Reader.active=true;
-    }
-    void Start()
-    {
+        Browser.InitialURL=GetPdfUrl(_pdfFilename,1);
+        Reader.SetActive(true);
+        FreeHandRuntimeU.SetPlatform(Platforms.OculusQuest);
+        Fhr = FreeHandRuntimeU.Instance;
+        if (Fhr==null) Debug.Log("FreeHandRuntimeU initialization failed.");
+        InitGestureList();
+        Fhr.SetActive(true);
     }
     void Update()
     {
-        if(Input.GetKeyDown(KeyCode.LeftArrow))
+        //call FreeHandRuntimuU.Update(), but only if hand tracking is ready.
+        if ((LeftSkeleton.Bones != null && LeftSkeleton.Bones.Count > 0)
+            || (RightSkeleton.Bones != null && RightSkeleton.Bones.Count > 0))
+        {
+            HandsUOQ2 currentHands = new HandsUOQ2(LeftSkeleton, RightSkeleton);
+            if (Fhr.IsActive())
+            {
+                Fhr.Update(currentHands, Cam.transform.forward);
+            }
+        }
+
+        /*if(Input.GetKeyDown(KeyCode.LeftArrow))
         {
             if(_currentPage>1) 
             {
                 _currentPage--;
-                LoadURL(GetPdfUrl(PDFfilename,_currentPage));
+                ShowPrevPageInPDF();
             }
         }
         if(Input.GetKeyDown(KeyCode.RightArrow))
         {
             _currentPage++;
-            LoadURL(GetPdfUrl(PDFfilename,_currentPage));
+            ShowNextPageInPDF();
+        }
+        if(Input.GetKeyDown(KeyCode.UpArrow))
+        {
+            _currentPage=1;
+            ShowFirstPageInPDF();
         }
         if(Input.GetKeyDown(KeyCode.S))
         {
@@ -82,7 +106,7 @@ public class AppController : MonoBehaviour
         if(Input.GetKeyDown(KeyCode.K))
         {
             ScaleReader(.9f);
-        }
+        }*/
 
 
     }
@@ -96,9 +120,9 @@ public class AppController : MonoBehaviour
             {
                 do
                 {
-                    rndVec.X=Random.Range(-maxDist, maxDist);
-                    rndVec.Y=Random.Range(.5f, maxDist);
-                    rndVec.Z=Random.Range(-maxDist, maxDist);
+                    rndVec.X=UnityEngine.Random.Range(-maxDist, maxDist);
+                    rndVec.Y=UnityEngine.Random.Range(.5f, maxDist);
+                    rndVec.Z=UnityEngine.Random.Range(-maxDist, maxDist);
                 } while(rndVec.VectorLength() < minDist);
                 var go = GameObject.Instantiate(Star, 
                             ConversionTools.Position3DToVector3(rndVec),
@@ -120,6 +144,38 @@ public class AppController : MonoBehaviour
                 engine.SendNavigateEvent(URL,false,false);
             }
     }
+    private void ShowPrevPageInPDF()
+    {
+        //using browser key codes, see https://unixpapa.com/js/key.html
+        BrowserEngine engine = Browser.GetMainEngine();
+        engine.SendCharEvent(37,MessageLibrary.KeyboardEventType.Down); //37 = left arrow key
+        engine.SendCharEvent(37,MessageLibrary.KeyboardEventType.Up);
+        _timeOfLastPageTurn = DateTime.Now;
+    }
+    private void ShowNextPageInPDF()
+    {
+        //using browser key codes, see https://unixpapa.com/js/key.html
+        BrowserEngine engine = Browser.GetMainEngine();
+        engine.SendCharEvent(39,MessageLibrary.KeyboardEventType.Down); //39 = right arrow key
+        engine.SendCharEvent(39,MessageLibrary.KeyboardEventType.Up);
+        _timeOfLastPageTurn = DateTime.Now;
+    }
+    private void ShowFirstPageInPDF()
+    {
+        //using browser key codes, see https://unixpapa.com/js/key.html
+        BrowserEngine engine = Browser.GetMainEngine();
+        engine.SendCharEvent(36,MessageLibrary.KeyboardEventType.Down); //36 = Home key
+        engine.SendCharEvent(36,MessageLibrary.KeyboardEventType.Up);
+        _timeOfLastPageTurn = DateTime.Now;
+    }
+    private void ShowLastPageInPDF()
+    {
+        //using browser key codes, see https://unixpapa.com/js/key.html
+        BrowserEngine engine = Browser.GetMainEngine();
+        engine.SendCharEvent(35,MessageLibrary.KeyboardEventType.Down); //35 = End key
+        engine.SendCharEvent(35,MessageLibrary.KeyboardEventType.Up);
+        _timeOfLastPageTurn = DateTime.Now;
+    }
     private void MoveReader(Vector3 relativeMovement)
     {
         Reader.transform.Translate(relativeMovement, Space.Self);
@@ -133,4 +189,21 @@ public class AppController : MonoBehaviour
     {
         Reader.transform.localScale = multiplicator * Reader.transform.localScale;
     }
+
+    private void InitGestureList()
+    {
+        GestureU NextPage = FreeHandRuntimeU.GetPredefinedGesture("NextPage");
+        NextPage.Stages[2].DwellTime=750;
+        NextPage.Stages[1].AddEventListener(GestureEventTypes.Start,
+                (object sender, FreeHandEventArgs args) => {ShowNextPageInPDF();});
+        NextPage.Stages[2].AddEventListener(GestureEventTypes.Holding,
+                (object sender, FreeHandEventArgs args) => 
+                {
+                    if(StandardTools.TimeTools.GetDifferenceInMilliseconds(DateTime.Now, _timeOfLastPageTurn) >= 1000/MAX_PAGE_TURNS_PER_SECOND)
+                        ShowNextPageInPDF();
+                });
+        Fhr.AddGesture(NextPage);
+        Debug.Log("Gesture list "+Fhr.Gestures.Length);
+    }
+
 }
