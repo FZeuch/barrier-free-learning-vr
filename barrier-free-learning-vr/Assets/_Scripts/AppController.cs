@@ -193,7 +193,6 @@ public class AppController : MonoBehaviour
     private void InitGestureList()
     {
         GestureU NextPage = FreeHandRuntimeU.GetPredefinedGesture("NextPage");
-        NextPage.Stages[2].DwellTime=750;
         NextPage.Stages[1].AddEventListener(GestureEventTypes.Start,
                 (object sender, FreeHandEventArgs args) => {ShowNextPageInPDF();});
         NextPage.Stages[2].AddEventListener(GestureEventTypes.Holding,
@@ -203,7 +202,17 @@ public class AppController : MonoBehaviour
                         ShowNextPageInPDF();
                 });
         Fhr.AddGesture(NextPage);
-        Debug.Log("Gesture list "+Fhr.Gestures.Length);
+
+        GestureU PrevPage = FreeHandRuntimeU.GetPredefinedGesture("PrevPage");
+        PrevPage.Stages[1].AddEventListener(GestureEventTypes.Start,
+                (object sender, FreeHandEventArgs args) => {ShowPrevPageInPDF();});
+        PrevPage.Stages[2].AddEventListener(GestureEventTypes.Holding,
+                (object sender, FreeHandEventArgs args) => 
+                {
+                    if(StandardTools.TimeTools.GetDifferenceInMilliseconds(DateTime.Now, _timeOfLastPageTurn) >= 1000/MAX_PAGE_TURNS_PER_SECOND)
+                        ShowPrevPageInPDF();
+                });
+        Fhr.AddGesture(PrevPage);
     }
 
 }
