@@ -17,6 +17,7 @@ public class AppController : MonoBehaviour
     private string _pdfFilename = "PDF/K10m.pdf";
     private DateTime _timeOfLastPageTurn;
     private FreeHandRuntimeU Fhr;
+    private Vector3 _readerOriginalScale;
     void Awake()
     {
         SetBackgroundStars();
@@ -27,6 +28,7 @@ public class AppController : MonoBehaviour
         if (Fhr==null) Debug.Log("FreeHandRuntimeU initialization failed.");
         InitGestureList();
         Fhr.SetActive(true);
+        _readerOriginalScale=Reader.transform.localScale;
     }
     void Update()
     {
@@ -189,6 +191,12 @@ public class AppController : MonoBehaviour
     {
         Reader.transform.localScale = multiplicator * Reader.transform.localScale;
     }
+    private void RecenterView()
+    {
+        Vector3 lookDir = Cam.transform.forward;
+        Reader.transform.position=Cam.transform.position+lookDir;
+        Reader.transform.eulerAngles=new Vector3(0,Cam.transform.eulerAngles.y,0);
+    }
 
     private void InitGestureList()
     {
@@ -213,6 +221,42 @@ public class AppController : MonoBehaviour
                         ShowPrevPageInPDF();
                 });
         Fhr.AddGesture(PrevPage);
+
+        GestureU GreetLeft = FreeHandRuntimeU.GetPredefinedGesture("GreetLeft");
+        GreetLeft.Stages[0].AddEventListener(GestureEventTypes.Holding,
+                (object sender, FreeHandEventArgs args) => 
+                {
+                    if (args.Path!=null && args.Path.HighestIndex >=1)
+                    {
+                        float readerDistance = Vector3.Distance(Cam.transform.position,Reader.transform.position);
+                        Reader.transform.Translate(readerDistance*1.5f*ConversionTools.Position3DToVector3(args.Path.Path[args.Path.HighestIndex]-args.Path.Path[args.Path.HighestIndex-1]));
+                    }   
+                });
+        Fhr.AddGesture(GreetLeft);
+
+        GestureU IndexDown = FreeHandRuntimeU.GetPredefinedGesture("IndexDown");
+        IndexDown.Stages[0].AddEventListener(GestureEventTypes.Start,
+                (object sender, FreeHandEventArgs args) => {ShowLastPageInPDF();});
+        Fhr.AddGesture(IndexDown);
+
+        GestureU IndexUp = FreeHandRuntimeU.GetPredefinedGesture("IndexUp");
+        IndexUp.Stages[0].AddEventListener(GestureEventTypes.Start,
+                (object sender, FreeHandEventArgs args) => {ShowFirstPageInPDF();});
+        Fhr.AddGesture(IndexUp);
+
+        GestureU IndexFingersForward = FreeHandRuntimeU.GetPredefinedGesture("IndexFingersForward");
+        IndexFingersForward.Stages[0].AddEventListener(GestureEventTypes.Start,
+                (object sender, FreeHandEventArgs args) => {RecenterView();});
+        Fhr.AddGesture(IndexFingersForward);
+
+        GestureU FishSize = FreeHandRuntimeU.GetPredefinedGesture("FishSize");
+        FishSize.Stages[0].AddEventListener(GestureEventTypes.Holding,
+                (object sender, FreeHandEventArgs args) => 
+                {
+                    float readerDistance = Vector3.Distance(Cam.transform.position,Reader.transform.position);
+                    Reader.transform.localScale = (5*readerDistance*args.DistanceBetweenHands)*_readerOriginalScale;
+                });
+        Fhr.AddGesture(FishSize);
     }
 
 }
