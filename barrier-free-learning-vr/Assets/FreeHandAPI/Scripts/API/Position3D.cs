@@ -65,18 +65,6 @@ namespace FreeHandGestureFramework.EnumsAndTypes
             if(lookingDirection==null) return null;
             return new Position3D(lookingDirection.X,0,lookingDirection.Y).NormalizedVector();
         } 
-        ///<summary>Transforms a rotation in world space to a local rotation relative to the looking
-        ///direction. Only the rotation around the y axis will be affected.</summary>
-        ///<param name="rotationInWorldSpace">A Position3D that contains the rotation values around the
-        ///x, y and z axis. Euler angles are used.</param>
-        ///<param name="lookingDirection">The looking direction vector from which the local rotations are derived.</param>
-        public static Position3D GetLocalRotation(Position3D rotationInWorldSpace, Position3D lookingDirection)
-        {
-            float lookingDirectionRotationY=MathTools.GetCounterClockwiseAngle(lookingDirection.Z, lookingDirection.X);
-            return new Position3D(MathTools.PositiveModValue(rotationInWorldSpace.X,360),
-                                rotationInWorldSpace.Y-lookingDirectionRotationY,
-                                MathTools.PositiveModValue(rotationInWorldSpace.Z,360));
-        }
         ///<summary>Returns true, if X, Y and Z equal 0. Note that the values need to be zero exactly without tolerance.</summary>
         public bool IsZero()
         {
@@ -133,6 +121,15 @@ namespace FreeHandGestureFramework.EnumsAndTypes
             
             return rotatedzxy;
         }
+        ///<summary>Rotates the vector using a Quaternion.</summary>
+        ///<param name="rq">The rotation quaternion</param>
+        public Position3D Rotate (RotationQuat rq)
+        {
+            RotationQuat pos = new RotationQuat(X,Y,Z,0);
+            RotationQuat rq_ = new RotationQuat(-rq.X, -rq.Y, -rq.Z, rq.W);
+            RotationQuat rotated = rq*pos*rq_;
+            return new Position3D(rotated.X, rotated.Y, rotated.Z);
+        }
         ///<summary>Returns a scaled vector</summary>
         ///<param name="sx">The scale factor of the x coordinate</param>
         ///<param name="sy">The scale factor of the y coordinate</param>
@@ -149,7 +146,7 @@ namespace FreeHandGestureFramework.EnumsAndTypes
         }
         public override string ToString()
         {
-            return "("+X+"/"+Y+"/"+Z+")";
+            return String.Format("({0:0.0}/{1:0.0}/{2:0.0})",X,Y,Z);
         }
     }
 }

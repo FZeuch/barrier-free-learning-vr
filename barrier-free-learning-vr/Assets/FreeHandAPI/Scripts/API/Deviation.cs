@@ -99,7 +99,6 @@ namespace FreeHandGestureFramework.EnumsAndTypes
     public class Deviation3D
     {
         public Position3D RelativeVector {get; set;}
-        //public Position3D Point1 = new Position3D(); //TODO:delete
         public Deviation[] Tolerances = new Deviation[6];
         private Position3D _lastDirectionRight = new Position3D(1,0,0);
         public Deviation3D() : this(new Position3D(), new Deviation(), new Deviation(), new Deviation(), new Deviation(), new Deviation(), new Deviation()) {}

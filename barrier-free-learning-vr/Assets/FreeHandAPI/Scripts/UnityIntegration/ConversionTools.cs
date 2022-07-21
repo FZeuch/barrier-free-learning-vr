@@ -29,5 +29,9 @@ namespace FreeHandGestureUnity
             for(int i=0; i<vectors.Length; i++) vectors[i]=Position3DToVector3(positions[i]);
             return vectors;
         }
+        internal static RotationQuat QuaternionToRotationQuat(Quaternion q)
+        {
+            return new RotationQuat(q.x, q.y, q.z, q.w);
+        }
     }
 }

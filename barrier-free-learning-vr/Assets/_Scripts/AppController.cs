@@ -13,7 +13,6 @@ public class AppController : MonoBehaviour
     public GameObject Star;
     public GameObject Reader;
     public WebBrowser Browser;
-    private int _currentPage=1;
     private string _pdfFilename = "PDF/K10m.pdf";
     private DateTime _timeOfLastPageTurn;
     private FreeHandRuntimeU Fhr;
@@ -36,7 +35,7 @@ public class AppController : MonoBehaviour
         if ((LeftSkeleton.Bones != null && LeftSkeleton.Bones.Count > 0)
             || (RightSkeleton.Bones != null && RightSkeleton.Bones.Count > 0))
         {
-            HandsUOQ2 currentHands = new HandsUOQ2(LeftSkeleton, RightSkeleton);
+            HandsUOQ currentHands = new HandsUOQ(LeftSkeleton, RightSkeleton);
             if (Fhr.IsActive())
             {
                 Fhr.Update(currentHands, Cam.transform.forward);
@@ -196,6 +195,7 @@ public class AppController : MonoBehaviour
         Vector3 lookDir = Cam.transform.forward;
         Reader.transform.position=Cam.transform.position+lookDir;
         Reader.transform.eulerAngles=new Vector3(0,Cam.transform.eulerAngles.y,0);
+        Reader.transform.localScale=_readerOriginalScale;
     }
 
     private void InitGestureList()
@@ -244,7 +244,7 @@ public class AppController : MonoBehaviour
                 (object sender, FreeHandEventArgs args) => {ShowFirstPageInPDF();});
         Fhr.AddGesture(IndexUp);
 
-        GestureU IndexFingersForward = FreeHandRuntimeU.GetPredefinedGesture("IndexFingersForward");
+        GestureU IndexFingersForward = FreeHandRuntimeU.GetPredefinedGesture("IndexFingersFwd");
         IndexFingersForward.Stages[0].AddEventListener(GestureEventTypes.Start,
                 (object sender, FreeHandEventArgs args) => {RecenterView();});
         Fhr.AddGesture(IndexFingersForward);

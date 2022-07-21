@@ -33,9 +33,10 @@ namespace FreeHandGestureFramework
     public class HandPoseInWorldSpace : HandPose
     {
         public Position3D Position;
-        public Position3D Rotation;
+        //public Position3D Rotation;
+        public RotationQuat Rotation;
         public Position3D Scale;
-        public HandPoseInWorldSpace(Position3D[] bones, Position3D position, Position3D rotation, Position3D scale) : base(bones)
+        public HandPoseInWorldSpace(Position3D[] bones, Position3D position, RotationQuat rotation, Position3D scale) : base(bones)
         {
             Position = position;
             Rotation = rotation;
@@ -44,9 +45,8 @@ namespace FreeHandGestureFramework
 
         public Position3D LocalToWorld(Position3D point)
         {
-            return Position+point.Rotate(Rotation.X, Rotation.Y, Rotation.Z).Scale(Scale.X, Scale.Y, Scale.Z);
+            return Position+point.Rotate(Rotation).Scale(Scale.X, Scale.Y, Scale.Z);
         }
-        //TODO: implement WorldToLocal
     }
     [XmlInclude(typeof(FreeHandGestureUnity.WeightedHandPoseU)), XmlInclude(typeof(FreeHandGestureUnity.OculusQuest.WeightedHandPoseUOQ))]
     public class WeightedHandPose : HandPose
@@ -108,7 +108,14 @@ namespace FreeHandGestureFramework
         ///to the left, and the hand pose is still recognized. Note that if HandOrientation is null, hand orientation
         ///will not be considered at all during recognition.</value>
         public Deviation3D HandOrientation = null;
-
+        public void SetHandOrientation(RotationQuat rotation, Deviation tolerance)
+        {
+            HandOrientation = new Deviation3D(rotation.GetEulerAngles(), tolerance);
+        }
+        public void SetHandOrientation(RotationQuat rotation, Deviation tolNegX, Deviation tolPosX, Deviation tolNegY, Deviation tolPosY, Deviation tolNegZ, Deviation tolPosZ)
+        {
+            HandOrientation = new Deviation3D(rotation.GetEulerAngles(), tolNegX, tolPosX, tolNegY, tolPosY, tolNegZ, tolPosZ);
+        }
     }
 
     public class Hands

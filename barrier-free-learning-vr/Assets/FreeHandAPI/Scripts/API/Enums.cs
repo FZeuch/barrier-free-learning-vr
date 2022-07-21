@@ -59,7 +59,5 @@ namespace FreeHandGestureFramework.EnumsAndTypes
         PositiveYaw = 3,
         PositiveRoll = 4,
         NegativeRoll = 5       //negative roll (lifting the right wing of an aeroplane) is a positive rotation around the x axis in a lefthanded coordinate system
-
     }
-
 }

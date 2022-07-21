@@ -3,7 +3,6 @@ using UnityEngine;
 
 namespace FreeHandGestureUnity
 {
-    //TODO:unnötige Klasse?löschen?
     public class FreeHandAPIEventArgsU: FreeHandEventArgs
     {
         public new Vector3 LeftHandPosition

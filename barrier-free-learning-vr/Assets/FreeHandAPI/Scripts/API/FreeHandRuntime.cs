@@ -336,10 +336,11 @@ namespace FreeHandGestureFramework
             }
             else //target stage does exist
             {
-                RaiseEvent(GestureEventTypes.StageTransition, currentHands,timeStamp);//stage transition event on the "from" stage not the "to" stage
+                RaiseEvent(GestureEventTypes.StageTransition, currentHands,timeStamp);//invoke stage transition event on the "from" stage not the "to" stage
                 Gestures[ActiveGesture].CurrentStage = targetStage;
                 GestureStage currentStage=Gestures[ActiveGesture].GetCurrentStage();
                 currentStage.StageRecognitionTime = timeStamp;
+                RaiseEvent(GestureEventTypes.Recognized, currentHands, timeStamp);//invoke recognized event on the "to" stage
                 if(Gestures[ActiveGesture].GetCurrentStage().DwellTime<=0) StartStage(currentHands, timeStamp);//start event on target stage if no dwell time
 
                 if (currentStage.AutoSetManipulationHand)

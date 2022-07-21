@@ -356,8 +356,8 @@ namespace FreeHandGestureFramework
         public Position3D GetHandPosition(HandPoseInWorldSpace pose, bool left=false)
         {
             if (pose==null || pose.Bones==null || pose.Bones.Length == 0) return null;
-            if (left && LeftManipulationBone>0 && LeftManipulationBone<pose.Bones.Length) return pose.LocalToWorld(pose.Bones[LeftManipulationBone]);//pose.Position+pose.Bones[LeftManipulationBone];
-            if (!left && RightManipulationBone>0 && RightManipulationBone<pose.Bones.Length) return pose.LocalToWorld(pose.Bones[RightManipulationBone]);//pose.Position+pose.Bones[RightManipulationBone];
+            if (left && LeftManipulationBone>0 && LeftManipulationBone<pose.Bones.Length) return pose.LocalToWorld(pose.Bones[LeftManipulationBone]);
+            if (!left && RightManipulationBone>0 && RightManipulationBone<pose.Bones.Length) return pose.LocalToWorld(pose.Bones[RightManipulationBone]);
             //return the center of the bounding box around all bones
             float xmin=float.MaxValue, xmax=float.MinValue;
             float ymin=float.MaxValue, ymax=float.MinValue;
@@ -403,7 +403,7 @@ namespace FreeHandGestureFramework
             float orientationConf = 1;
             if (gesturePose.HandOrientation!=null && lookingDirection!=null)
             {
-                orientationConf = gesturePose.HandOrientation.CalcSimpleDeviation(Position3D.GetLocalRotation(comparePose.Rotation, lookingDirection), 360);
+                orientationConf = gesturePose.HandOrientation.CalcSimpleDeviation(RotationQuat.GetRotationInLookDir(comparePose.Rotation, lookingDirection).GetEulerAngles(), 360);
             }
             return totalConfidence*orientationConf;
         }

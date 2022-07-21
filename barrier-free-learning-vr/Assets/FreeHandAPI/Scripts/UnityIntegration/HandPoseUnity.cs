@@ -15,7 +15,7 @@ namespace FreeHandGestureUnity
         public HandPoseInWorldSpaceU(Vector3[] bones, Transform worldCoords) 
             : base(ConversionTools.Vector3ArrayToPosition3D(bones),
                    ConversionTools.Vector3ToPosition3D(worldCoords.position),
-                   ConversionTools.Vector3ToPosition3D(worldCoords.rotation.eulerAngles),
+                   ConversionTools.QuaternionToRotationQuat(worldCoords.rotation),
                    ConversionTools.Vector3ToPosition3D(worldCoords.lossyScale)){}
         public Vector3[] GetVector3Bones() {return ConversionTools.Position3DArrayToVector3(Bones);}
     }
