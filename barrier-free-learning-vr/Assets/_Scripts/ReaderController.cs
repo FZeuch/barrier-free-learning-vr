@@ -5,7 +5,7 @@ using FreeHandGestureUnity.OculusQuest;
 using SimpleWebBrowser;
 using System;
 
-public class AppController : MonoBehaviour
+public class ReaderController : MonoBehaviour
 {
     private const int MAX_PAGE_TURNS_PER_SECOND = 15;
     public OVRSkeleton LeftSkeleton, RightSkeleton;
