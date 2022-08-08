@@ -782,8 +782,9 @@ MonoBehaviour:
   LeftSkeleton: {fileID: 621207157}
   RightSkeleton: {fileID: 1879449084}
   Cam: {fileID: 500794998}
-  Star: {fileID: 1974031943}
-  Reader: {fileID: 660438082}
+  ReaderAnchor: {fileID: 660438082}
+  SelectorAnchor: {fileID: 1122640597}
+  SelectorCont: {fileID: 371721520}
   Browser: {fileID: 1752354886}
 --- !u!4 &371721519
 Transform:

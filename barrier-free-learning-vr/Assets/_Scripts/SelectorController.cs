@@ -18,7 +18,7 @@ public class SelectorController : MonoBehaviour
     public GameObject[] Dwellers;
     public LineRenderer Ray;
     public ReaderController ReaderCont;
-    private FreeHandRuntimeU Fhr;
+    private FreeHandRuntimeU _fhr;
     private GestureU[] _gestures = new GestureU[3];
     private Vector3 _dwellerOriginalScale;
     private int _dwellingIndex = -1;
@@ -32,8 +32,8 @@ public class SelectorController : MonoBehaviour
     {
         SetBackgroundStars();
         FreeHandRuntimeU.SetPlatform(Platforms.OculusQuest);
-        Fhr = FreeHandRuntimeU.Instance;
-        if (Fhr==null) Debug.Log("FreeHandRuntimeU initialization failed.");
+        _fhr = FreeHandRuntimeU.Instance;
+        if (_fhr==null) Debug.Log("FreeHandRuntimeU initialization failed.");
         InitGestureList();
         InitSelectors();
         ActivateSelectorMode();
@@ -46,11 +46,23 @@ public class SelectorController : MonoBehaviour
             || (RightSkeleton.Bones != null && RightSkeleton.Bones.Count > 0))
         {
             HandsUOQ currentHands = new HandsUOQ(LeftSkeleton, RightSkeleton);
-            if (Fhr.IsActive())
+            if (_fhr.IsActive())
             {
-                Fhr.Update(currentHands, Cam.transform.forward);
+                _fhr.Update(currentHands, Cam.transform.forward);
             }
         }
+    }
+    public void ActivateSelectorMode()
+    {
+        ReaderAnchor.SetActive(false);
+        ReaderCont.gameObject.SetActive(false);
+        SelectorAnchor.SetActive(true);
+        this.gameObject.SetActive(true);
+        Ray.transform.gameObject.SetActive(false);
+        _fhr.StopCurrentGesture();
+        _fhr.SetActive(false);
+        _fhr.Gestures=_gestures;
+        _fhr.SetActive(true);
     }
     private void SetBackgroundStars()
     {
@@ -130,7 +142,10 @@ public class SelectorController : MonoBehaviour
                                      _dwellStart = DateTime.Now;
                                      _dwellingIndex = i;
                                 }
-                                else if (StandardTools.TimeTools.GetDifferenceInMilliseconds(_dwellStart, DateTime.Now) >= _dwellTime) Debug.Log("Change Mode!");
+                                else if (StandardTools.TimeTools.GetDifferenceInMilliseconds(_dwellStart, DateTime.Now) >= _dwellTime)                                     
+                                {
+                                    ReaderCont.ActivateReaderMode("pdf/"+Filenames[i].text);
+                                }
                                 else
                                 {
                                     float dwellerSize = (float)StandardTools.TimeTools.GetDifferenceInMilliseconds(_dwellStart, DateTime.Now) / (float)_dwellTime;
@@ -140,7 +155,7 @@ public class SelectorController : MonoBehaviour
                             }
                             else Dwellers[i].SetActive(false);
                         }
-                        if (!hitDetected) //raycast hit, but witih none of the Selectors
+                        if (!hitDetected) //raycast hit, but with none of the Selectors
                         {
                             if (_dwellingIndex >= 0) Dwellers[_dwellingIndex].SetActive(false);
                             _dwellingIndex = -1;
@@ -162,16 +177,6 @@ public class SelectorController : MonoBehaviour
         _gestures[2]=FingerPointer;
 
         //TODO:Abbrechen-Geste hinzufügen
-    }
-    private void ActivateSelectorMode()
-    {
-        ReaderAnchor.SetActive(false);
-        SelectorAnchor.SetActive(true);
-        Ray.transform.gameObject.SetActive(false);
-        Fhr.StopCurrentGesture();
-        Fhr.SetActive(false);
-        Fhr.Gestures=_gestures;
-        Fhr.SetActive(true);
     }
     private void InitSelectors()
     {
@@ -199,8 +204,8 @@ public class SelectorController : MonoBehaviour
                 for (int j = 0; j < itemsPerPage; j++)
                 {
                     Vector3 pos = new Vector3(Selectors[j].transform.position.x+(i*_PAGEWIDTH), Selectors[j].transform.position.y, Selectors[j].transform.position.z);
-                    SelectorsExtended[(i*itemsPerPage)+j] = GameObject.Instantiate(Selectors[j], pos, Quaternion.identity); 
-                    DwellersExtended[(i*itemsPerPage)+j] = GameObject.Instantiate(Dwellers[j], pos, Quaternion.identity);
+                    SelectorsExtended[(i*itemsPerPage)+j] = GameObject.Instantiate(Selectors[j], pos, Quaternion.identity, SelectorAnchor.transform); 
+                    DwellersExtended[(i*itemsPerPage)+j] = GameObject.Instantiate(Dwellers[j], pos, Quaternion.identity, SelectorAnchor.transform);
                     FilenamesExtended[(i*itemsPerPage)+j] = SelectorsExtended[(i*itemsPerPage)+j].GetComponentInChildren<TMPro.TMP_Text>();
                 }
             }
