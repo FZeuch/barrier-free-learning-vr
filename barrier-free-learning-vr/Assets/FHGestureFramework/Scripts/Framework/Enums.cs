@@ -7,6 +7,8 @@ namespace FreeHandGestureFramework.EnumsAndTypes
     public enum Platforms
     {
         OculusQuest,
+        HoloLens2,
+        ViveFocus,
         Custom
     }
     ///<summary>The TransitionCondition enum is used in GestureStage to define on which condition a

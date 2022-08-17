@@ -11,8 +11,8 @@ public class SelectorController : MonoBehaviour
     public OVRSkeleton LeftSkeleton, RightSkeleton;
     public GameObject Cam;
     public GameObject Star;
-    public GameObject ReaderAnchor;
     public GameObject SelectorAnchor;
+    public GameObject ReaderAnchor;
     public TMPro.TMP_Text[] Filenames;
     public GameObject[] Selectors;
     public GameObject[] Dwellers;
@@ -63,6 +63,7 @@ public class SelectorController : MonoBehaviour
         _fhr.SetActive(false);
         _fhr.Gestures=_gestures;
         _fhr.SetActive(true);
+        _dwellingIndex = -1;
     }
     private void SetBackgroundStars()
     {

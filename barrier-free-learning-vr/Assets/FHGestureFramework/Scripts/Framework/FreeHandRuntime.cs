@@ -73,6 +73,12 @@ namespace FreeHandGestureFramework
             case Platforms.OculusQuest:
                 Instance.HandSkeleton = new HandSkeletonOculusQuest();
                 break;
+            case Platforms.HoloLens2:
+                Instance.HandSkeleton = new HandSkeletonHoloLens2();
+                break;
+            case Platforms.ViveFocus:
+                Instance.HandSkeleton = new HandSkeletonViveFocus();
+                break;
             }
         }
         ///<summary>Returns true, if the runtime is active and false otherwise. When the runtime
@@ -397,19 +403,16 @@ namespace FreeHandGestureFramework
             f.StageIndex = g.GetCurrentStageIndex();
             f.DwellTime = s.DwellTime;
             f.GestureName = g.Name;
-            f.LeftHandPosition = currentHands?.Left?.Position;
-            f.RightHandPosition = currentHands?.Right?.Position;
+            f.LeftHandPosition = s.GetHandPosition(currentHands.Left, true);
+            f.RightHandPosition = s.GetHandPosition(currentHands.Right, false);
             f.TimeSinceStageRecognized = g.GetMillisSinceStageRecognized(timeStamp);
             f.TimeSinceGestureRecognized = g.GetMillisSinceGestureRecognized(timeStamp);
 
-            Position3D LeftHandPos = s.GetHandPosition(currentHands.Left, true);
-            Position3D RightHandPos = s.GetHandPosition(currentHands.Right, false);
-            if (LeftHandPos!=null && RightHandPos!=null) f.DistanceBetweenHands = LeftHandPos.Distance(RightHandPos);
+            if (f.LeftHandPosition!=null && f.RightHandPosition!=null) f.DistanceBetweenHands = f.LeftHandPosition.Distance(f.RightHandPosition);
             else f.DistanceBetweenHands=float.MaxValue;
 
             f.Path = g.Path;
 
-            //if(g._path?.HighestIndex>=0) f.GetPathFunction = g.GetPath;
             return f;
         }
 
@@ -430,7 +433,8 @@ namespace FreeHandGestureFramework
                 case GestureEventTypes.Released: RaiseGestureReleasedEvent?.Invoke(this, args); break;
             }
             //Let the active stage raise their events too
-            Gestures[args.GestureIndex]?.Stages[args.StageIndex]?.RaiseEvent(type, args);
+            if (args.GestureIndex>=0 && args.GestureIndex<Gestures.Count && args.StageIndex>=0 && args.StageIndex < Gestures[args.GestureIndex].StageCount)
+                Gestures[args.GestureIndex].Stages[args.StageIndex].RaiseEvent(type, args);
         }
         private class Nested
         {

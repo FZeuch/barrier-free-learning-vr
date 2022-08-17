@@ -13,12 +13,13 @@ public class ReaderController : MonoBehaviour
     public GameObject ReaderAnchor;
     public GameObject SelectorAnchor;
     public SelectorController SelectorCont;
-    public WebBrowser Browser;
-    //internal string PdfFilename;
+    public GameObject go1, go2;
+    private WebBrowser _browser;
     private FreeHandRuntimeU _fhr;
-    private GestureU[] _gestures = new GestureU[7];
+    private GestureU[] _gestures = new GestureU[9];
     private DateTime _timeOfLastPageTurn;
     private Vector3 _readerOriginalScale;
+    private int _rotationAxis = -1;
     void Awake()
     {
         ReaderAnchor.SetActive(true);
@@ -43,7 +44,16 @@ public class ReaderController : MonoBehaviour
     }
     public void ActivateReaderMode(string pdfFilename)
     {
-        Browser.InitialURL=GetPdfUrl(pdfFilename);
+        //The web browser plugin has problems with loading a new PDF from an already opened PDF. The solution for this is,
+        //to instantiate a clone of the ReaderAnchor Game Object, destroy the old one, and use the fresh browser's
+        //InitialURL attribute to show the PDF.
+        GameObject newReaderAnchor = GameObject.Instantiate(ReaderAnchor, ReaderAnchor.transform.position, ReaderAnchor.transform.rotation);
+        GameObject.Destroy(ReaderAnchor);
+        ReaderAnchor = newReaderAnchor;
+        SelectorCont.ReaderAnchor = newReaderAnchor;
+        _browser = ReaderAnchor.GetComponentInChildren<WebBrowser>();
+        _browser.InitialURL=GetPdfUrl(pdfFilename);
+
         SelectorAnchor.SetActive(false);
         SelectorCont.gameObject.SetActive(false);
         ReaderAnchor.SetActive(true);
@@ -55,23 +65,12 @@ public class ReaderController : MonoBehaviour
     }
     private string GetPdfUrl(string filename, int page=1)
     {
-            return "file:///"+Application.persistentDataPath+"/"+filename+"#page="+page+"&zoom=128&toolbar=0";
-    }
-    private void LoadURL(string URL)
-    {
-        Debug.Log("GGGG "+URL);
-            BrowserEngine engine = Browser.GetMainEngine();
-            if (engine != null && engine.Initialized)
-            {
-                //for some strange reason, the NavigateEvent has to be sent twice in order to work properly
-                engine.SendNavigateEvent(URL,false,false);
-                engine.SendNavigateEvent(URL,false,false);
-            }
+        return "file:///"+Application.persistentDataPath+"/"+filename+"#page="+page+"&zoom=128&toolbar=0";
     }
     private void ShowPrevPageInPDF()
     {
         //using browser key codes, see https://unixpapa.com/js/key.html
-        BrowserEngine engine = Browser.GetMainEngine();
+        BrowserEngine engine = _browser.GetMainEngine();
         engine.SendCharEvent(37,MessageLibrary.KeyboardEventType.Down); //37 = left arrow key
         engine.SendCharEvent(37,MessageLibrary.KeyboardEventType.Up);
         _timeOfLastPageTurn = DateTime.Now;
@@ -79,7 +78,7 @@ public class ReaderController : MonoBehaviour
     private void ShowNextPageInPDF()
     {
         //using browser key codes, see https://unixpapa.com/js/key.html
-        BrowserEngine engine = Browser.GetMainEngine();
+        BrowserEngine engine = _browser.GetMainEngine();
         engine.SendCharEvent(39,MessageLibrary.KeyboardEventType.Down); //39 = right arrow key
         engine.SendCharEvent(39,MessageLibrary.KeyboardEventType.Up);
         _timeOfLastPageTurn = DateTime.Now;
@@ -87,7 +86,7 @@ public class ReaderController : MonoBehaviour
     private void ShowFirstPageInPDF()
     {
         //using browser key codes, see https://unixpapa.com/js/key.html
-        BrowserEngine engine = Browser.GetMainEngine();
+        BrowserEngine engine = _browser.GetMainEngine();
         engine.SendCharEvent(36,MessageLibrary.KeyboardEventType.Down); //36 = Home key
         engine.SendCharEvent(36,MessageLibrary.KeyboardEventType.Up);
         _timeOfLastPageTurn = DateTime.Now;
@@ -95,7 +94,7 @@ public class ReaderController : MonoBehaviour
     private void ShowLastPageInPDF()
     {
         //using browser key codes, see https://unixpapa.com/js/key.html
-        BrowserEngine engine = Browser.GetMainEngine();
+        BrowserEngine engine = _browser.GetMainEngine();
         engine.SendCharEvent(35,MessageLibrary.KeyboardEventType.Down); //35 = End key
         engine.SendCharEvent(35,MessageLibrary.KeyboardEventType.Up);
         _timeOfLastPageTurn = DateTime.Now;
@@ -123,6 +122,8 @@ public class ReaderController : MonoBehaviour
 
     private void InitGestureList()
     {
+        //For each gesture used in the reader: load it, add listeners and add it to the gesture list
+
         GestureU NextPage = FreeHandRuntimeU.GetPredefinedGesture("NextPage");
         NextPage.Stages[1].AddEventListener(GestureEventTypes.Start,
                 (object sender, FreeHandEventArgs args) => {ShowNextPageInPDF();});
@@ -180,193 +181,70 @@ public class ReaderController : MonoBehaviour
                     ReaderAnchor.transform.localScale = (5*readerDistance*args.DistanceBetweenHands)*_readerOriginalScale;
                 });
         _gestures[6] = FishSize;
-        //TODO: zurück-Geste dazu
+
+        GestureU Exit = FreeHandRuntimeU.GetPredefinedGesture("Exit");
+        Exit.Stages[1].AddEventListener(GestureEventTypes.Start,
+                (object sender, FreeHandEventArgs args) => {SelectorCont.ActivateSelectorMode();});
+        _gestures[7] = Exit;
+
+        GestureU Rotation = FreeHandRuntimeU.GetPredefinedGesture("Rotation");
+        Rotation.Stages[0].AddEventListener(GestureEventTypes.Holding,
+                (object sender, FreeHandEventArgs args) => 
+                {
+                    if (args.Path!=null && args.Path.HighestIndex >=1 && args.RightHandPosition != null)
+                    {
+                        Position3D lookDir = ConversionTools.Vector3ToPosition3D(Cam.transform.forward);
+                        Ray xAxis = new Ray(ConversionTools.Position3DToVector3(args.Path.Path[0]), ConversionTools.Position3DToVector3(Position3D.GetRightDirection(lookDir)));
+                        Ray yAxis = new Ray(ConversionTools.Position3DToVector3(args.Path.Path[0]), ConversionTools.Position3DToVector3(Position3D.GetUpDirection(lookDir)));
+                        Ray zAxis = new Ray(ConversionTools.Position3DToVector3(args.Path.Path[0]), ConversionTools.Position3DToVector3(Position3D.GetForwardDirection(lookDir)));
+                        Vector3 rhPos = ConversionTools.Position3DToVector3(args.RightHandPosition-args.Path.Path[0]);
+
+                        float moveDistAlongX = Vector3.Project(rhPos, xAxis.direction).magnitude;
+                        float moveDistAlongY = Vector3.Project(rhPos, yAxis.direction).magnitude;
+                        float moveDistAlongZ = Vector3.Project(rhPos, zAxis.direction).magnitude;
+
+                        //If rotationAxis is not yet set, determine the rotation axis by calculating along which 
+                        //axis the user's hand is moving. The rotation axis will be used until the left hand pose is released.
+                        if (_rotationAxis == -1)
+                        {
+                            float minDist = 0.03f;
+                            if (moveDistAlongX > moveDistAlongY && moveDistAlongX > moveDistAlongZ && rhPos.magnitude >= minDist) _rotationAxis = 1; // hand moving along x axis -> rotation axis is y axis
+                            else if (moveDistAlongY > moveDistAlongX && moveDistAlongY > moveDistAlongZ && rhPos.magnitude >= minDist) _rotationAxis = 2;
+                            else if (moveDistAlongZ > moveDistAlongX && moveDistAlongZ > moveDistAlongY && rhPos.magnitude >= minDist) _rotationAxis = 0;
+                        }
+
+                        //If rotationAxis is set, rotate reader around that axis
+                        else
+                        {
+                            float rotationDegree = 0;
+                            int sign = 1; //determines the direction of the rotation (e.g. left or right)
+                            switch(_rotationAxis)
+                            {
+                                case 0: //input for rotation around the x axis is hand movement along z axis
+                                    if(Vector3.Dot(zAxis.direction, rhPos)>0) sign = -1;    //rot. direction can be calculated with scalar product
+                                    rotationDegree = moveDistAlongZ * 360 * sign;           //1m of movement along z axis results in a 360 degree rotation
+                                    //set new local rotation around x axis and leave y and z rotation untouched
+                                    ReaderAnchor.transform.localEulerAngles = (new Vector3(rotationDegree,ReaderAnchor.transform.localEulerAngles.y,ReaderAnchor.transform.localEulerAngles.z));
+                                    break;
+                                case 1: //input for rotation around the y axis is hand movement along x axis
+                                    if(Vector3.Dot(xAxis.direction, rhPos)>0) sign = -1;
+                                    rotationDegree = moveDistAlongX * 360 *sign; 
+                                    ReaderAnchor.transform.localEulerAngles = (new Vector3(ReaderAnchor.transform.localEulerAngles.x,rotationDegree,ReaderAnchor.transform.localEulerAngles.z));
+                                    break;
+                                case 2: //input for rotation around the z axis is hand movement along y axis
+                                    if(Vector3.Dot(yAxis.direction, rhPos)>0) sign = -1;
+                                    rotationDegree = moveDistAlongY * 360 * sign; 
+                                    ReaderAnchor.transform.localEulerAngles = (new Vector3(ReaderAnchor.transform.localEulerAngles.x,ReaderAnchor.transform.localEulerAngles.y, rotationDegree));
+                                    break;
+                            }
+                        }
+                    }   
+                });
+        Rotation.Stages[0].AddEventListener(GestureEventTypes.Released,
+                (object sender, FreeHandEventArgs args) => {_rotationAxis = -1;});
+
+        _gestures[8] = Rotation;
+
     }
 
 }
-/*public class ReaderController : MonoBehaviour
-{
-    private const int MAX_PAGE_TURNS_PER_SECOND = 15;
-    public OVRSkeleton LeftSkeleton, RightSkeleton;
-    public GameObject Cam;
-    public GameObject Star;
-    public GameObject Reader;
-    public WebBrowser Browser;
-    private string _pdfFilename = "PDF/K10m.pdf";
-    private DateTime _timeOfLastPageTurn;
-    private FreeHandRuntimeU Fhr;
-    private Vector3 _readerOriginalScale;
-    void Awake()
-    {
-        SetBackgroundStars();
-        Browser.InitialURL=GetPdfUrl(_pdfFilename,1);
-        Reader.SetActive(true);
-        FreeHandRuntimeU.SetPlatform(Platforms.OculusQuest);
-        Fhr = FreeHandRuntimeU.Instance;
-        if (Fhr==null) Debug.Log("FreeHandRuntimeU initialization failed.");
-        InitGestureList();
-        Fhr.SetActive(true);
-        _readerOriginalScale=Reader.transform.localScale;
-    }
-    void Update()
-    {
-        //call FreeHandRuntimuU.Update(), but only if hand tracking is ready.
-        if ((LeftSkeleton.Bones != null && LeftSkeleton.Bones.Count > 0)
-            || (RightSkeleton.Bones != null && RightSkeleton.Bones.Count > 0))
-        {
-            HandsUOQ currentHands = new HandsUOQ(LeftSkeleton, RightSkeleton);
-            if (Fhr.IsActive())
-            {
-                Fhr.Update(currentHands, Cam.transform.forward);
-            }
-        }
-    }
-    private void SetBackgroundStars()
-    {
-            int starCount = 300;
-            float minDist = 10;
-            float maxDist = 20;
-            Position3D rndVec = new Position3D();
-            for (int i=0; i<starCount; i++)
-            {
-                do
-                {
-                    rndVec.X=UnityEngine.Random.Range(-maxDist, maxDist);
-                    rndVec.Y=UnityEngine.Random.Range(.5f, maxDist);
-                    rndVec.Z=UnityEngine.Random.Range(-maxDist, maxDist);
-                } while(rndVec.VectorLength() < minDist);
-                var go = GameObject.Instantiate(Star, 
-                            ConversionTools.Position3DToVector3(rndVec),
-                            Quaternion.identity);
-                go.SetActive(true);
-            }
-    }
-    private string GetPdfUrl(string filename, int page)
-    {
-            return "file:///"+Application.persistentDataPath+"/"+filename+"#page="+page+"&zoom=128&toolbar=0";
-    }
-    private void LoadURL(string URL)
-    {
-            BrowserEngine engine = Browser.GetMainEngine();
-            if (engine != null && engine.Initialized)
-            {
-                //for some strange reason, the NavigateEvent has to be sent twice in order to work properly
-                engine.SendNavigateEvent(URL,false,false);
-                engine.SendNavigateEvent(URL,false,false);
-            }
-    }
-    private void ShowPrevPageInPDF()
-    {
-        //using browser key codes, see https://unixpapa.com/js/key.html
-        BrowserEngine engine = Browser.GetMainEngine();
-        engine.SendCharEvent(37,MessageLibrary.KeyboardEventType.Down); //37 = left arrow key
-        engine.SendCharEvent(37,MessageLibrary.KeyboardEventType.Up);
-        _timeOfLastPageTurn = DateTime.Now;
-    }
-    private void ShowNextPageInPDF()
-    {
-        //using browser key codes, see https://unixpapa.com/js/key.html
-        BrowserEngine engine = Browser.GetMainEngine();
-        engine.SendCharEvent(39,MessageLibrary.KeyboardEventType.Down); //39 = right arrow key
-        engine.SendCharEvent(39,MessageLibrary.KeyboardEventType.Up);
-        _timeOfLastPageTurn = DateTime.Now;
-    }
-    private void ShowFirstPageInPDF()
-    {
-        //using browser key codes, see https://unixpapa.com/js/key.html
-        BrowserEngine engine = Browser.GetMainEngine();
-        engine.SendCharEvent(36,MessageLibrary.KeyboardEventType.Down); //36 = Home key
-        engine.SendCharEvent(36,MessageLibrary.KeyboardEventType.Up);
-        _timeOfLastPageTurn = DateTime.Now;
-    }
-    private void ShowLastPageInPDF()
-    {
-        //using browser key codes, see https://unixpapa.com/js/key.html
-        BrowserEngine engine = Browser.GetMainEngine();
-        engine.SendCharEvent(35,MessageLibrary.KeyboardEventType.Down); //35 = End key
-        engine.SendCharEvent(35,MessageLibrary.KeyboardEventType.Up);
-        _timeOfLastPageTurn = DateTime.Now;
-    }
-    private void MoveReader(Vector3 relativeMovement)
-    {
-        Reader.transform.Translate(relativeMovement, Space.Self);
-    }
-    private void RotateReader(Vector3 rotation)
-    {
-        Reader.transform.Rotate(rotation, Space.Self);
-    }
-
-    private void ScaleReader(float multiplicator)
-    {
-        Reader.transform.localScale = multiplicator * Reader.transform.localScale;
-    }
-    private void RecenterView()
-    {
-        Vector3 lookDir = Cam.transform.forward;
-        Reader.transform.position=Cam.transform.position+lookDir;
-        Reader.transform.eulerAngles=new Vector3(0,Cam.transform.eulerAngles.y,0);
-        Reader.transform.localScale=_readerOriginalScale;
-    }
-
-    private void InitGestureList()
-    {
-        GestureU NextPage = FreeHandRuntimeU.GetPredefinedGesture("NextPage");
-        NextPage.Stages[1].AddEventListener(GestureEventTypes.Start,
-                (object sender, FreeHandEventArgs args) => {ShowNextPageInPDF();});
-        NextPage.Stages[2].AddEventListener(GestureEventTypes.Holding,
-                (object sender, FreeHandEventArgs args) => 
-                {
-                    if(StandardTools.TimeTools.GetDifferenceInMilliseconds(DateTime.Now, _timeOfLastPageTurn) >= 1000/MAX_PAGE_TURNS_PER_SECOND)
-                        ShowNextPageInPDF();
-                });
-        Fhr.AddGesture(NextPage);
-
-        GestureU PrevPage = FreeHandRuntimeU.GetPredefinedGesture("PrevPage");
-        PrevPage.Stages[1].AddEventListener(GestureEventTypes.Start,
-                (object sender, FreeHandEventArgs args) => {ShowPrevPageInPDF();});
-        PrevPage.Stages[2].AddEventListener(GestureEventTypes.Holding,
-                (object sender, FreeHandEventArgs args) => 
-                {
-                    if(StandardTools.TimeTools.GetDifferenceInMilliseconds(DateTime.Now, _timeOfLastPageTurn) >= 1000/MAX_PAGE_TURNS_PER_SECOND)
-                        ShowPrevPageInPDF();
-                });
-        Fhr.AddGesture(PrevPage);
-
-        GestureU GreetLeft = FreeHandRuntimeU.GetPredefinedGesture("GreetLeft");
-        GreetLeft.Stages[0].AddEventListener(GestureEventTypes.Holding,
-                (object sender, FreeHandEventArgs args) => 
-                {
-                    if (args.Path!=null && args.Path.HighestIndex >=1)
-                    {
-                        float readerDistance = Vector3.Distance(Cam.transform.position,Reader.transform.position);
-                        Reader.transform.Translate(readerDistance*1.5f*ConversionTools.Position3DToVector3(args.Path.Path[args.Path.HighestIndex]-args.Path.Path[args.Path.HighestIndex-1]));
-                    }   
-                });
-        Fhr.AddGesture(GreetLeft);
-
-        GestureU IndexDown = FreeHandRuntimeU.GetPredefinedGesture("IndexDown");
-        IndexDown.Stages[0].AddEventListener(GestureEventTypes.Start,
-                (object sender, FreeHandEventArgs args) => {ShowLastPageInPDF();});
-        Fhr.AddGesture(IndexDown);
-
-        GestureU IndexUp = FreeHandRuntimeU.GetPredefinedGesture("IndexUp");
-        IndexUp.Stages[0].AddEventListener(GestureEventTypes.Start,
-                (object sender, FreeHandEventArgs args) => {ShowFirstPageInPDF();});
-        Fhr.AddGesture(IndexUp);
-
-        GestureU IndexFingersForward = FreeHandRuntimeU.GetPredefinedGesture("IndexFingersFwd");
-        IndexFingersForward.Stages[0].AddEventListener(GestureEventTypes.Start,
-                (object sender, FreeHandEventArgs args) => {RecenterView();});
-        Fhr.AddGesture(IndexFingersForward);
-
-        GestureU FishSize = FreeHandRuntimeU.GetPredefinedGesture("FishSize");
-        FishSize.Stages[0].AddEventListener(GestureEventTypes.Holding,
-                (object sender, FreeHandEventArgs args) => 
-                {
-                    float readerDistance = Vector3.Distance(Cam.transform.position,Reader.transform.position);
-                    Reader.transform.localScale = (5*readerDistance*args.DistanceBetweenHands)*_readerOriginalScale;
-                });
-        Fhr.AddGesture(FishSize);
-    }
-
-}*/

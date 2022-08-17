@@ -45,7 +45,7 @@ namespace FreeHandGestureFramework.EnumsAndTypes
         public static Position3D GetRightDirection(Position3D lookingDirection)
         {
             if(lookingDirection==null) return null;
-            return new Position3D(lookingDirection.X,0,lookingDirection.Y).Rotate(0,90,0,false).NormalizedVector();
+            return GetForwardDirection(lookingDirection).Rotate(0,90,0,false);
         }
         ///<summary>Returns a normalized vector that points up relative to the lookingDirection vector.
         ///The vector returned is the same as the "up" vector in world space, wich is constant
@@ -63,7 +63,7 @@ namespace FreeHandGestureFramework.EnumsAndTypes
         public static Position3D GetForwardDirection(Position3D lookingDirection)
         {
             if(lookingDirection==null) return null;
-            return new Position3D(lookingDirection.X,0,lookingDirection.Y).NormalizedVector();
+            return new Position3D(lookingDirection.X,0,lookingDirection.Z).NormalizedVector();
         } 
         ///<summary>Returns true, if X, Y and Z equal 0. Note that the values need to be zero exactly without tolerance.</summary>
         public bool IsZero()
