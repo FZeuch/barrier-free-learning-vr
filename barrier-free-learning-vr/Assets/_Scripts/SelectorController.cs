@@ -1,5 +1,5 @@
 using UnityEngine;
-using FreeHandGestureFramework.EnumsAndTypes;
+using FreeHandGestureFramework.DataTypes;
 using FreeHandGestureUnity;
 using FreeHandGestureUnity.OculusQuest;
 using System;
@@ -17,7 +17,7 @@ public class SelectorController : MonoBehaviour
     public GameObject[] Dwellers;
     public LineRenderer Ray;
     public ReaderController ReaderCont;
-    private FreeHandRuntimeU _fhr;
+    private GestureHandlerU _ghu;
     private GestureU[] _gestures = new GestureU[4];
     private Vector3 _dwellerOriginalScale;
     private int _dwellingIndex = -1;
@@ -30,9 +30,9 @@ public class SelectorController : MonoBehaviour
     void Awake()
     {
         SetBackgroundStars();
-        FreeHandRuntimeU.SetPlatform(Platforms.OculusQuest);
-        _fhr = FreeHandRuntimeU.Instance;
-        if (_fhr==null) Debug.Log("FreeHandRuntimeU initialization failed.");
+        GestureHandlerU.SetPlatform(Platforms.OculusQuest);
+        _ghu = GestureHandlerU.Instance;
+        if (_ghu==null) Debug.Log("FreeHandRuntimeU initialization failed.");
         InitGestureList();
         InitSelectors();
         ActivateSelectorMode();
@@ -45,9 +45,9 @@ public class SelectorController : MonoBehaviour
             || (RightSkeleton.Bones != null && RightSkeleton.Bones.Count > 0))
         {
             HandsUOQ currentHands = new HandsUOQ(LeftSkeleton, RightSkeleton);
-            if (_fhr.IsActive())
+            if (_ghu.IsActive())
             {
-                _fhr.Update(currentHands, Cam.transform.forward);
+                _ghu.Update(currentHands, Cam.transform.forward);
             }
         }
     }
@@ -56,10 +56,10 @@ public class SelectorController : MonoBehaviour
         ReaderAnchor.SetActive(false);
         SelectorAnchor.SetActive(true);
         Ray.transform.gameObject.SetActive(false);
-        _fhr.StopCurrentGesture();
-        _fhr.SetActive(false);
-        _fhr.Gestures=_gestures;
-        _fhr.SetActive(true);
+        _ghu.StopCurrentGesture();
+        _ghu.SetActive(false);
+        _ghu.Gestures=_gestures;
+        _ghu.SetActive(true);
         _dwellingIndex = -1;
     }
     private void SetBackgroundStars()
@@ -84,7 +84,7 @@ public class SelectorController : MonoBehaviour
     }
     private void InitGestureList()
     {
-        GestureU NextPage = FreeHandRuntimeU.GetPredefinedGesture("NextPage");
+        GestureU NextPage = GestureHandlerU.GetPredefinedGesture("NextPage");
         NextPage.Stages[1].AddEventListener(GestureEventTypes.Start,
                 (object sender, FreeHandEventArgs args) => 
                 {
@@ -100,7 +100,7 @@ public class SelectorController : MonoBehaviour
                 });
         _gestures[0]=NextPage;
 
-        GestureU PrevPage = FreeHandRuntimeU.GetPredefinedGesture("PrevPage");
+        GestureU PrevPage = GestureHandlerU.GetPredefinedGesture("PrevPage");
         PrevPage.Stages[1].AddEventListener(GestureEventTypes.Start,
                 (object sender, FreeHandEventArgs args) => 
                 {
@@ -116,7 +116,7 @@ public class SelectorController : MonoBehaviour
                 });
         _gestures[1]=PrevPage;
 
-        GestureU FingerPointer = FreeHandRuntimeU.GetPredefinedGesture("PointWithIndexFinger");
+        GestureU FingerPointer = GestureHandlerU.GetPredefinedGesture("PointWithIndexFinger");
         FingerPointer.Stages[0].AddEventListener(GestureEventTypes.Holding,
                 (object sender, FreeHandEventArgs args) => 
                 {
@@ -174,7 +174,7 @@ public class SelectorController : MonoBehaviour
                 });
         _gestures[2]=FingerPointer;
 
-        GestureU Exit = FreeHandRuntimeU.GetPredefinedGesture("Exit");
+        GestureU Exit = GestureHandlerU.GetPredefinedGesture("Exit");
         Exit.Stages[1].AddEventListener(GestureEventTypes.Start,
                 (object sender, FreeHandEventArgs args) => {Application.Quit();});
         _gestures[3] = Exit;

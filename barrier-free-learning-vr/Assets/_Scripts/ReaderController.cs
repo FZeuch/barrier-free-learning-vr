@@ -1,5 +1,5 @@
 using UnityEngine;
-using FreeHandGestureFramework.EnumsAndTypes;
+using FreeHandGestureFramework.DataTypes;
 using FreeHandGestureUnity;
 using FreeHandGestureUnity.OculusQuest;
 using System;
@@ -14,16 +14,16 @@ public class ReaderController : MonoBehaviour
     public GameObject SelectorAnchor;
     public SelectorController SelectorCont;
     public PDFViewer Viewer;
-    private FreeHandRuntimeU _fhr;
+    private GestureHandlerU _ghu;
     private GestureU[] _gestures = new GestureU[9];
     private DateTime _timeOfLastPageTurn;
     private Vector3 _readerOriginalScale;
     private int _rotationAxis = -1;
     void Awake()
     {
-        FreeHandRuntimeU.SetPlatform(Platforms.OculusQuest);
-        _fhr = FreeHandRuntimeU.Instance;
-        if (_fhr==null) Debug.Log("FreeHandRuntimeU initialization failed.");
+        GestureHandlerU.SetPlatform(Platforms.OculusQuest);
+        _ghu = GestureHandlerU.Instance;
+        if (_ghu==null) Debug.Log("FreeHandRuntimeU initialization failed.");
         InitGestureList();
         _readerOriginalScale=ReaderAnchor.transform.localScale;
     }
@@ -34,9 +34,9 @@ public class ReaderController : MonoBehaviour
             || (RightSkeleton.Bones != null && RightSkeleton.Bones.Count > 0))
         {
             HandsUOQ currentHands = new HandsUOQ(LeftSkeleton, RightSkeleton);
-            if (_fhr.IsActive())
+            if (_ghu.IsActive())
             {
-                _fhr.Update(currentHands, Cam.transform.forward);
+                _ghu.Update(currentHands, Cam.transform.forward);
             }
         }
     }
@@ -45,10 +45,10 @@ public class ReaderController : MonoBehaviour
         SelectorAnchor.SetActive(false);
         ReaderAnchor.SetActive(true);
         Viewer.LoadDocumentFromFile(Application.persistentDataPath+"/"+pdfFilename);
-        _fhr.StopCurrentGesture();
-        _fhr.SetActive(false);
-        _fhr.Gestures=_gestures;
-        _fhr.SetActive(true);
+        _ghu.StopCurrentGesture();
+        _ghu.SetActive(false);
+        _ghu.Gestures=_gestures;
+        _ghu.SetActive(true);
     }
     private string GetPdfUrl(string filename, int page=1)
     {
@@ -99,7 +99,7 @@ public class ReaderController : MonoBehaviour
     {
         //For each gesture used in the reader: load it, add listeners and add it to the gesture list
 
-        GestureU NextPage = FreeHandRuntimeU.GetPredefinedGesture("NextPage");
+        GestureU NextPage = GestureHandlerU.GetPredefinedGesture("NextPage");
         NextPage.Stages[1].AddEventListener(GestureEventTypes.Start,
                 (object sender, FreeHandEventArgs args) => {ShowNextPageInPDF();});
         NextPage.Stages[2].AddEventListener(GestureEventTypes.Holding,
@@ -110,7 +110,7 @@ public class ReaderController : MonoBehaviour
                 });
         _gestures[0] = NextPage;
 
-        GestureU PrevPage = FreeHandRuntimeU.GetPredefinedGesture("PrevPage");
+        GestureU PrevPage = GestureHandlerU.GetPredefinedGesture("PrevPage");
         PrevPage.Stages[1].AddEventListener(GestureEventTypes.Start,
                 (object sender, FreeHandEventArgs args) => {ShowPrevPageInPDF();});
         PrevPage.Stages[2].AddEventListener(GestureEventTypes.Holding,
@@ -121,7 +121,7 @@ public class ReaderController : MonoBehaviour
                 });
         _gestures[1] = PrevPage;
 
-        GestureU GreetLeft = FreeHandRuntimeU.GetPredefinedGesture("GreetLeft");
+        GestureU GreetLeft = GestureHandlerU.GetPredefinedGesture("GreetLeft");
         GreetLeft.Stages[0].AddEventListener(GestureEventTypes.Holding,
                 (object sender, FreeHandEventArgs args) => 
                 {
@@ -133,22 +133,22 @@ public class ReaderController : MonoBehaviour
                 });
         _gestures[2] = GreetLeft;
 
-        GestureU IndexDown = FreeHandRuntimeU.GetPredefinedGesture("IndexDown");
+        GestureU IndexDown = GestureHandlerU.GetPredefinedGesture("IndexDown");
         IndexDown.Stages[0].AddEventListener(GestureEventTypes.Start,
                 (object sender, FreeHandEventArgs args) => {ShowLastPageInPDF();});
         _gestures[3] = IndexDown;
 
-        GestureU IndexUp = FreeHandRuntimeU.GetPredefinedGesture("IndexUp");
+        GestureU IndexUp = GestureHandlerU.GetPredefinedGesture("IndexUp");
         IndexUp.Stages[0].AddEventListener(GestureEventTypes.Start,
                 (object sender, FreeHandEventArgs args) => {ShowFirstPageInPDF();});
         _gestures[4] = IndexUp;
 
-        GestureU IndexFingersForward = FreeHandRuntimeU.GetPredefinedGesture("IndexFingersFwd");
+        GestureU IndexFingersForward = GestureHandlerU.GetPredefinedGesture("IndexFingersFwd");
         IndexFingersForward.Stages[0].AddEventListener(GestureEventTypes.Start,
                 (object sender, FreeHandEventArgs args) => {RecenterView();});
         _gestures[5] = IndexFingersForward;
 
-        GestureU FishSize = FreeHandRuntimeU.GetPredefinedGesture("FishSize");
+        GestureU FishSize = GestureHandlerU.GetPredefinedGesture("FishSize");
         FishSize.Stages[0].AddEventListener(GestureEventTypes.Holding,
                 (object sender, FreeHandEventArgs args) => 
                 {
@@ -157,12 +157,12 @@ public class ReaderController : MonoBehaviour
                 });
         _gestures[6] = FishSize;
 
-        GestureU Exit = FreeHandRuntimeU.GetPredefinedGesture("Exit");
+        GestureU Exit = GestureHandlerU.GetPredefinedGesture("Exit");
         Exit.Stages[1].AddEventListener(GestureEventTypes.Start,
                 (object sender, FreeHandEventArgs args) => {SelectorCont.ActivateSelectorMode();});
         _gestures[7] = Exit;
 
-        GestureU Rotation = FreeHandRuntimeU.GetPredefinedGesture("Rotation");
+        GestureU Rotation = GestureHandlerU.GetPredefinedGesture("Rotation");
         Rotation.Stages[0].AddEventListener(GestureEventTypes.Holding,
                 (object sender, FreeHandEventArgs args) => 
                 {
