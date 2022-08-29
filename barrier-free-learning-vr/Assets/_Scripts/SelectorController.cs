@@ -2,7 +2,6 @@ using UnityEngine;
 using FreeHandGestureFramework.EnumsAndTypes;
 using FreeHandGestureUnity;
 using FreeHandGestureUnity.OculusQuest;
-using SimpleWebBrowser;
 using System;
 using System.IO;
 
@@ -19,7 +18,7 @@ public class SelectorController : MonoBehaviour
     public LineRenderer Ray;
     public ReaderController ReaderCont;
     private FreeHandRuntimeU _fhr;
-    private GestureU[] _gestures = new GestureU[3];
+    private GestureU[] _gestures = new GestureU[4];
     private Vector3 _dwellerOriginalScale;
     private int _dwellingIndex = -1;
     private DateTime _dwellStart;
@@ -55,9 +54,7 @@ public class SelectorController : MonoBehaviour
     public void ActivateSelectorMode()
     {
         ReaderAnchor.SetActive(false);
-        ReaderCont.gameObject.SetActive(false);
         SelectorAnchor.SetActive(true);
-        this.gameObject.SetActive(true);
         Ray.transform.gameObject.SetActive(false);
         _fhr.StopCurrentGesture();
         _fhr.SetActive(false);
@@ -177,10 +174,17 @@ public class SelectorController : MonoBehaviour
                 });
         _gestures[2]=FingerPointer;
 
-        //TODO:Abbrechen-Geste hinzufügen
+        GestureU Exit = FreeHandRuntimeU.GetPredefinedGesture("Exit");
+        Exit.Stages[1].AddEventListener(GestureEventTypes.Start,
+                (object sender, FreeHandEventArgs args) => {Application.Quit();});
+        _gestures[3] = Exit;
     }
     private void InitSelectors()
     {
+        //Check if PDF path is present. Create path if necessary.
+        string pdfPath = Application.persistentDataPath+"/pdf";
+        if (!Directory.Exists(pdfPath)) Directory.CreateDirectory(pdfPath);
+
         //Collect PDF files
         string[] pdfs = Directory.GetFiles(Application.persistentDataPath+"/pdf","*.pdf", SearchOption.TopDirectoryOnly);
 

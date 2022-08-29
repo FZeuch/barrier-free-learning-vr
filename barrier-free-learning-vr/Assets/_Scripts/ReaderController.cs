@@ -2,8 +2,8 @@ using UnityEngine;
 using FreeHandGestureFramework.EnumsAndTypes;
 using FreeHandGestureUnity;
 using FreeHandGestureUnity.OculusQuest;
-using SimpleWebBrowser;
 using System;
+using Paroxe.PdfRenderer;
 
 public class ReaderController : MonoBehaviour
 {
@@ -13,8 +13,7 @@ public class ReaderController : MonoBehaviour
     public GameObject ReaderAnchor;
     public GameObject SelectorAnchor;
     public SelectorController SelectorCont;
-    public GameObject go1, go2;
-    private WebBrowser _browser;
+    public PDFViewer Viewer;
     private FreeHandRuntimeU _fhr;
     private GestureU[] _gestures = new GestureU[9];
     private DateTime _timeOfLastPageTurn;
@@ -22,7 +21,6 @@ public class ReaderController : MonoBehaviour
     private int _rotationAxis = -1;
     void Awake()
     {
-        ReaderAnchor.SetActive(true);
         FreeHandRuntimeU.SetPlatform(Platforms.OculusQuest);
         _fhr = FreeHandRuntimeU.Instance;
         if (_fhr==null) Debug.Log("FreeHandRuntimeU initialization failed.");
@@ -44,20 +42,9 @@ public class ReaderController : MonoBehaviour
     }
     public void ActivateReaderMode(string pdfFilename)
     {
-        //The web browser plugin has problems with loading a new PDF from an already opened PDF. The solution for this is,
-        //to instantiate a clone of the ReaderAnchor Game Object, destroy the old one, and use the fresh browser's
-        //InitialURL attribute to show the PDF.
-        GameObject newReaderAnchor = GameObject.Instantiate(ReaderAnchor, ReaderAnchor.transform.position, ReaderAnchor.transform.rotation);
-        GameObject.Destroy(ReaderAnchor);
-        ReaderAnchor = newReaderAnchor;
-        SelectorCont.ReaderAnchor = newReaderAnchor;
-        _browser = ReaderAnchor.GetComponentInChildren<WebBrowser>();
-        _browser.InitialURL=GetPdfUrl(pdfFilename);
-
         SelectorAnchor.SetActive(false);
-        SelectorCont.gameObject.SetActive(false);
         ReaderAnchor.SetActive(true);
-        this.gameObject.SetActive(true);
+        Viewer.LoadDocumentFromFile(Application.persistentDataPath+"/"+pdfFilename);
         _fhr.StopCurrentGesture();
         _fhr.SetActive(false);
         _fhr.Gestures=_gestures;
@@ -69,34 +56,22 @@ public class ReaderController : MonoBehaviour
     }
     private void ShowPrevPageInPDF()
     {
-        //using browser key codes, see https://unixpapa.com/js/key.html
-        BrowserEngine engine = _browser.GetMainEngine();
-        engine.SendCharEvent(37,MessageLibrary.KeyboardEventType.Down); //37 = left arrow key
-        engine.SendCharEvent(37,MessageLibrary.KeyboardEventType.Up);
+        Viewer.GoToPreviousPage();
         _timeOfLastPageTurn = DateTime.Now;
     }
     private void ShowNextPageInPDF()
     {
-        //using browser key codes, see https://unixpapa.com/js/key.html
-        BrowserEngine engine = _browser.GetMainEngine();
-        engine.SendCharEvent(39,MessageLibrary.KeyboardEventType.Down); //39 = right arrow key
-        engine.SendCharEvent(39,MessageLibrary.KeyboardEventType.Up);
+        Viewer.GoToNextPage();
         _timeOfLastPageTurn = DateTime.Now;
     }
     private void ShowFirstPageInPDF()
     {
-        //using browser key codes, see https://unixpapa.com/js/key.html
-        BrowserEngine engine = _browser.GetMainEngine();
-        engine.SendCharEvent(36,MessageLibrary.KeyboardEventType.Down); //36 = Home key
-        engine.SendCharEvent(36,MessageLibrary.KeyboardEventType.Up);
+        Viewer.GoToPage(0);
         _timeOfLastPageTurn = DateTime.Now;
     }
     private void ShowLastPageInPDF()
     {
-        //using browser key codes, see https://unixpapa.com/js/key.html
-        BrowserEngine engine = _browser.GetMainEngine();
-        engine.SendCharEvent(35,MessageLibrary.KeyboardEventType.Down); //35 = End key
-        engine.SendCharEvent(35,MessageLibrary.KeyboardEventType.Up);
+        Viewer.GoToPage(Viewer.Document.GetPageCount()-1);
         _timeOfLastPageTurn = DateTime.Now;
     }
     private void MoveReader(Vector3 relativeMovement)
