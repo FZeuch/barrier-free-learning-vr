@@ -158,7 +158,7 @@ public class ReaderController : MonoBehaviour
         _gestures[6] = FishSize;
 
         GestureU Exit = GestureHandlerU.GetPredefinedGesture("Exit");
-        Exit.Stages[1].AddEventListener(GestureEventTypes.Start,
+        Exit.Stages[0].AddEventListener(GestureEventTypes.Start,
                 (object sender, FreeHandEventArgs args) => {SelectorCont.ActivateSelectorMode();});
         _gestures[7] = Exit;
 
