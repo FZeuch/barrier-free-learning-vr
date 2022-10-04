@@ -36,7 +36,7 @@ namespace FreeHandGestureFramework
         ///must be recognized for this gesture stage to be recognized.
         ///For more recognition options, refer to the description of RelHandsPosition,
         ///RelPosToLastPoseLeft and RelPosToLastPoseRight.</value>
-        public bool TwoHandedGesture = false;
+        public bool TwoHanded = false;
         ///<value>Set RelHandsPosition, if both hands must be held in a specified position
         ///relative to each other for this stage to be recognized (e.g. right hand 10cm right of left hand, or right hand 10-20cm
         ///above left hand). The directions are considered in looking direction.
@@ -122,7 +122,7 @@ namespace FreeHandGestureFramework
         {
             foreach(WeightedHandPose lp in orig.LeftHandPoses) LeftHandPoses.Add(new WeightedHandPose(lp));
             foreach(WeightedHandPose rp in orig.RightHandPoses) RightHandPoses.Add(new WeightedHandPose(rp));
-            TwoHandedGesture = orig.TwoHandedGesture;
+            TwoHanded = orig.TwoHanded;
             RelHandsPosition = orig.RelHandsPosition == null ? null : new Deviation3D(orig.RelHandsPosition);
             RelPosToLastPoseLeft = orig.RelPosToLastPoseLeft == null ? null : new Deviation3D(orig.RelPosToLastPoseLeft);
             RelPosToLastPoseRight = orig.RelPosToLastPoseRight == null ? null : new Deviation3D(orig.RelPosToLastPoseRight);
@@ -247,7 +247,7 @@ namespace FreeHandGestureFramework
                 //     compared to the hand position(s) at the beginning of the previous stage if TwoHandedGesture is true,
                 //     RelHandsPosition is not null and RelPosToLastPoseLeft or RelPosToLastPoseRight is not null.
                 //(B4) as 0 if TwoHandedGesture is true, but RelHandsPosition is null and at least one RelPosToLastPose.. is null
-                if(TwoHandedGesture == false)
+                if(TwoHanded == false)
                 {
                     if(RelPosToLastPoseLeft!=null && RelPosToLastPoseRight!= null)
                         return Math.Max(confidenceRelPosToLastPoseLeft,confidenceRelPosToLastPoseRight); //case (A)
@@ -289,7 +289,7 @@ namespace FreeHandGestureFramework
                         if (conf > leftHandConfidence) leftHandConfidence = conf;
                     }
                 }
-                else leftHandConfidence = 1.0f;
+                else leftHandConfidence = 0;
 
                 float rightHandConfidence;
                 if (noRightPosesInThisStage) rightHandConfidence = 0;
@@ -302,21 +302,21 @@ namespace FreeHandGestureFramework
                         if (conf > rightHandConfidence) rightHandConfidence = conf;
                     }
                 }
-                else rightHandConfidence = 1.0f;
+                else rightHandConfidence = 0;
 
                 LastHandRecognized=RelevantHand.Any;//any means that no hand was recognized.
-                if (TwoHandedGesture &&
+                if (TwoHanded &&
                     ((leftHandConfidence>rightHandConfidence && rightHandConfidence>=RecognitionConfidence) ||
                     (rightHandConfidence>=leftHandConfidence && leftHandConfidence>=RecognitionConfidence)))
                     LastHandRecognized=RelevantHand.Both;//both hands were recognized
-                else if(!TwoHandedGesture && leftHandConfidence>rightHandConfidence && leftHandConfidence>=RecognitionConfidence)
+                else if(!TwoHanded && leftHandConfidence>rightHandConfidence && leftHandConfidence>=RecognitionConfidence)
                     LastHandRecognized=RelevantHand.Left;//left hand was recognized
-                else if(!TwoHandedGesture && rightHandConfidence>=leftHandConfidence && rightHandConfidence>=RecognitionConfidence)
+                else if(!TwoHanded && rightHandConfidence>=leftHandConfidence && rightHandConfidence>=RecognitionConfidence)
                     LastHandRecognized=RelevantHand.Right;//right hand was recogniized
 
                 leftHandConfidence *= confidenceRelPosToLastPoseLeft;
                 rightHandConfidence *= confidenceRelPosToLastPoseRight;
-                if (!TwoHandedGesture) return  Math.Max(leftHandConfidence, rightHandConfidence);//case (C)
+                if (!TwoHanded) return  Math.Max(leftHandConfidence, rightHandConfidence);//case (C)
                 else return Math.Min(leftHandConfidence, rightHandConfidence) * confidenceRelHandsPositions;//case (D)
             }
         }

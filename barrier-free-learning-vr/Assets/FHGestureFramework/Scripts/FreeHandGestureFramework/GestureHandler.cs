@@ -219,9 +219,7 @@ namespace FreeHandGestureFramework
         ///stages raises that event. E.g. if you add a listener method and set type to Recognized,
         ///the listener will be called every time a gesture (or next gesture stage) is recognized.
         ///The listener will receive an instance of FreeHandAPIEventArgs, which contains all relevant data
-        ///(e.g. gesture and stage index). NOTE: You may consider adding event listeners directly
-        ///to a gesture stage, so that the listener method will only be called if that specific stage raises
-        ///the event.</summary>
+        ///(e.g. gesture and stage index).</summary>
         ///<param name="type">The type of the event.</param>
         ///<param name="listener">The callback routine which will be called when the specified event is raised.</param>
         public void AddEventListener (GestureEventTypes type, Delegates.FreeHandGestureEventHandler listener)
@@ -235,6 +233,18 @@ namespace FreeHandGestureFramework
                 case GestureEventTypes.StageTransition: RaiseGestureStageTransitionEvent += listener; break;
                 case GestureEventTypes.Released: RaiseGestureReleasedEvent += listener; break;
             }
+        }
+        ///<summary>This method subscribes a listener method of type FreeHandGestureEventHandler to an
+        ///event specified by type. The subscribed method will then be called if the specified gesture stage
+        ///raises that event.</summary>
+        ///<param name="type">The type of the event.</param>
+        ///<param name="listener">The callback routine which will be called when the specified event is raised.</param>
+        ///<param name="gestureIndex">The index of the gesture in the gesture list that contains the gesture stage to which the listerer will be added.</param>
+        ///<param name="stageIndex">The index of the gesture stage to which the listener will be added.</param>
+        public void AddEventListener (GestureEventTypes type, Delegates.FreeHandGestureEventHandler listener, int gestureIndex, int stageIndex)
+        {
+            if (Gestures == null || Gestures.Count < gestureIndex + 1 || Gestures[gestureIndex].StageCount < stageIndex + 1) return;
+            Gestures[gestureIndex].Stages[stageIndex].AddEventListener(type, listener);
         }
         ///<summary>Removes an event listener from an event specified by type.</summary>
         ///<param name="type">The type of the event.</param>
@@ -250,6 +260,16 @@ namespace FreeHandGestureFramework
                 case GestureEventTypes.StageTransition: RaiseGestureStageTransitionEvent -= listener; break;
                 case GestureEventTypes.Released: RaiseGestureReleasedEvent -= listener; break;
             }
+        }
+        ///<summary>Removes an event listener from an event specified by type, which was previously added to a gesture stage.</summary>
+        ///<param name="type">The type of the event.</param>
+        ///<param name="listener">The callback routine which should be removed.</param>
+        ///<param name="gestureIndex">The index of the gesture in the gesture list that contains the gesture stage from which the listerer will be removed.</param>
+        ///<param name="stageIndex">The index of the gesture stage from which the listener will be removed.</param>
+        public void RemoveEventListener (GestureEventTypes type, Delegates.FreeHandGestureEventHandler listener, int gestureIndex, int stageIndex)
+        {
+            if (Gestures == null || Gestures.Count < gestureIndex + 1 || Gestures[gestureIndex].StageCount < stageIndex + 1) return;
+            Gestures[gestureIndex].Stages[stageIndex].RemoveEventListener(type, listener);
         }
         ///<summary>If the active gesture stage has the Cue value set in TransitionConditions, the runtime can
         ///move to the next gesture stage if this method is called. Otherwise, or if there is no active gesture,
