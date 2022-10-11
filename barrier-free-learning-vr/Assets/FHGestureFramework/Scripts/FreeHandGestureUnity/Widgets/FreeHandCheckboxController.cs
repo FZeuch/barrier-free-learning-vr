@@ -24,6 +24,7 @@ namespace FreeHandGestureUnity.Widgets
                 _checked = value;
             }
         }
+        // Start is called before the first frame update
         void Awake()
         {
             _meshRenderer = gameObject.GetComponent <MeshRenderer>();

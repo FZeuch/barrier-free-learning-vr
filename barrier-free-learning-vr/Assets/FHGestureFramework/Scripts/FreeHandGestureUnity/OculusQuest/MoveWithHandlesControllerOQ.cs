@@ -14,12 +14,10 @@ namespace FreeHandGestureUnity.OculusQuest
         private bool _rightHandTouching = false;
         private bool _moving = false;
 
-        // Start is called before the first frame update
         void Start()
         {
             GestureHandlerU gh = GestureHandlerU.Instance;
             GestureU connectedGesture=gh?.GetGesture(ConnectedGesture);
-            //TODO:if null, try to load gesture
             if (connectedGesture!=null)  
             {
                 gh.AddEventListener(GestureEventTypes.Holding, OnTouching);
@@ -49,7 +47,6 @@ namespace FreeHandGestureUnity.OculusQuest
                 float rotationAroundYAxis = -Vector3.SignedAngle(fromLeftHandToRightHand,Vector3.right,Vector3.up);
                 Go.transform.eulerAngles = new Vector3(0,rotationAroundYAxis,0);
                 Go.transform.position = Vector3.Lerp(leftPos, rightPos, .5f)+ new Vector3(0,0,.1f);//Point in the middle between hands
-                //TODO: adjust center of mesh so that no adjusting by adding a vector3 is needed
             }
         }
         public void OnRelease(object s, FreeHandEventArgs args)

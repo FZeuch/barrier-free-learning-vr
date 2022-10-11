@@ -3,10 +3,15 @@ using StandardTools;
 
 namespace FreeHandGestureFramework.DataTypes
 {
+    ///<summary>A class holding three float values like for a three dimensional vector.
+    ///Defines several methods and operators for vector calculation.</summary>
     public class Position3D
     {
+        ///<value>The X component</value>
         public float X;
+        ///<value>The Y component</value>
         public float Y;
+        ///<value>The Z component</value>
         public float Z;
         public Position3D(): this(0.0f, 0.0f, 0.0f) {}
         public Position3D(Position3D orig): this(orig.X, orig.Y, orig.Z){}

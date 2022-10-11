@@ -10,7 +10,7 @@ namespace FreeHandGestureFramework.DataTypes
         public delegate void FreeHandGestureEventHandler(object sender, FreeHandEventArgs args);
 
     }
-    ///<summary>The GestureEventTypes enum contains all types of events that can be invoked by the Free Hand Gesture Runtime.</summary>
+    ///<summary>The GestureEventTypes enum contains all types of events that can be invoked by GestureHandler and GestureStage.</summary>
     public enum GestureEventTypes
     {
         ///<value>The Recognized event is invoked, when a gesture stage is recognized. Note that, due to dwelling, the stage might not have started yet.</value>

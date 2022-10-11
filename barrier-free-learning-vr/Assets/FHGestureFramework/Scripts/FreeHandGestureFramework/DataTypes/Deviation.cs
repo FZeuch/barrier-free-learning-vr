@@ -12,7 +12,7 @@ namespace FreeHandGestureFramework.DataTypes
     ///the decreasing behaviour of CalcDeviation for input values between A and B.</remarks> 
     public class Deviation
     {
-        ///<value>This shape is used, if no shape value is defined while creating a new Deviation class.</value>
+        ///<value>This shape is used for constructors without shape value.</value>
         public const float DEFAULT_SHAPE = 1.0f; 
         private float _A;
         private float _B;
@@ -96,9 +96,20 @@ namespace FreeHandGestureFramework.DataTypes
         }
     }
 
+    ///<summary>The Deviation3D class is used to determine how much the distance between two
+    ///3D points matters. It defines tolerances for each direction (left, right, up, down, forward, back).
+    ///The CalcPositionalDeviation and CalcSimpleDeviation methods return a value between 0 and 1
+    ///that describes how much the distances are inside the tolerances.</summary> 
+
     public class Deviation3D
     {
+        ///<value>The three float values that are used in the CalcPositionalDeviation and CalcSimpleDeviation methods
+        ///to check their parameters against. For CalcPositionalDeviation, RelativeVector describes a three dimensional
+        ///transformation, e.g. RelativeVector = (1,0,0) describes a translation of 1 unit to the right. For CalcSimpleDeviaion,
+        ///RelativeVector is a Position3D object to check another Position3D object against.</value>. 
         public Position3D RelativeVector {get; set;}
+        ///<value>Six tolerance values. The indices can be interpreted as NegativeX, PositiveX, NegativeY, PositiveY,
+        ///NegativeZ, PositiveZ or Left, Right, Down, Up, Back, Forward in that order.</value>
         public Deviation[] Tolerances = new Deviation[6];
         private Position3D _lastDirectionRight = new Position3D(1,0,0);
         public Deviation3D() : this(new Position3D(), new Deviation(), new Deviation(), new Deviation(), new Deviation(), new Deviation(), new Deviation()) {}
@@ -119,11 +130,25 @@ namespace FreeHandGestureFramework.DataTypes
             Tolerances[5] = tolPosZ;
         }
         public Deviation3D (Deviation3D orig): this(new Position3D(orig.RelativeVector), new Deviation(orig.Tolerances[0]), new Deviation(orig.Tolerances[1]), new Deviation(orig.Tolerances[2]), new Deviation(orig.Tolerances[3]), new Deviation(orig.Tolerances[4]), new Deviation(orig.Tolerances[5])){}
+        ///<summary>Get one of the six tolerance values, using a DataTypes.DirectionLeftHanded value instead of an index.</summary> 
         public Deviation GetTolerance (DirectionLeftHanded d) {return Tolerances[(int)d];}
+        ///<summary>Get one of the six tolerance values, using a DataTypes.DirectionLeftHandedAxes value instead of an index.</summary> 
         public Deviation GetTolerance (DirectionLeftHandedAxes d) {return Tolerances[(int)d];}
+        ///<summary>Get one of the six tolerance values, using a DataTypes.DirectionRPYLeftHanded value (roll/pitch/yaw) instead of an index.</summary> 
         public Deviation GetTolerance (DirectionRPYLeftHanded d) {return Tolerances[(int)d];}
+        ///<summary>Set one of the six tolerance values, using a DataTypes.DirectionLeftHanded value instead of an index.</summary> 
+        ///<param name="dir">The direction (Left, Right, Down, Up, Back, Forward) of the tolerance value.</param>
+        ///<param name="dev">The Deviation instance defining the tolerance for the chosen direction.</param>
         public void SetTolerance (DirectionLeftHanded dir, Deviation dev) {Tolerances[(int)dir] = dev;}
+        ///<summary>Set one of the six tolerance values, using a DataTypes.DirectionLeftHandedAxes value instead of an index.</summary> 
+        ///<param name="dir">The axis (NegativeX, PositiveX, NegativeY, PositiveY, NegativeZ, PositiveZ)
+        /// for the tolerance value.</param>
+        ///<param name="dev">The Deviation instance defining the tolerance for the chosen axis.</param>
         public void SetTolerance (DirectionLeftHandedAxes dir, Deviation dev) {Tolerances[(int)dir] = dev;}
+        ///<summary>Set one of the six tolerance values, using a DataTypes.DirectionRPYLeftHanded value instead of an index.</summary> 
+        ///<param name="dir">The rotation axis (PositivePitch, NegativePitch, NegativeYaw, PositiveYaw, PositiveRoll, NegativeRoll)
+        /// of the tolerance value.</param>
+        ///<param name="dev">The Deviation instance defining the tolerance for the chosen rotation axis.</param>
         public void SetTolerance (DirectionRPYLeftHanded dir, Deviation dev) {Tolerances[(int)dir] = dev;}
         ///<summary>The CalcPositionalDeviation method returns a value between 0 and 1 that determines
         ///if pointB is close enough to relativeVector added to pointA taking tolerance values

@@ -9,6 +9,7 @@ using FreeHandGestureFramework.DataTypes;
 
 namespace FreeHandGestureFramework
 {
+    ///<summary>The Gesture class represents a complete gesture in Free Hand Gesture Framework</summary>
     public class Gesture
     {
         ///<value>The name of the gesture</value>
@@ -74,7 +75,6 @@ namespace FreeHandGestureFramework
         ///current stage has its RecordPath field set to true, a path of three dimensional positions will
         ///be recorded following the manipulation hand(s). A new position will only be recorded if the 
         ///given amount of milliseconds has passed since the last recorded position.</summary>
-        //TODO:deefine exact behaviour of path recording
         public void SetPathTemporalResolution(int milliseconds) 
         {
             _path.TemporalResolution = MathTools.Positive(milliseconds);

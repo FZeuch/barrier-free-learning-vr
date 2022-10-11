@@ -15,7 +15,7 @@ namespace FreeHandGestureUnity.Widgets
         public Material Touched_Material;
         public bool ToggleButton = false;
         private bool _isPressed = false;
-        private static DateTime _anyButtonReleaseTime;// = DateTime.Now.AddMilliseconds(-WAIT_TIME_BETWEEN_PRESS);
+        private static DateTime _anyButtonReleaseTime;
         private static FreeHandTouchButtonController _lock = null;
         private DateTime _enableTime;
         private bool _touchOnEnable=false;

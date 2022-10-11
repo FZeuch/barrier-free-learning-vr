@@ -2,6 +2,8 @@ using FreeHandGestureFramework.DataTypes;
 
 namespace FreeHandGestureFramework
 {
+    ///<summary>The base class for a hand skeleton model.
+    ///Specific models must be derived from this class.</summary>
     public abstract class HandSkeletonBase
     {
         public HandSkeletonBase()
@@ -10,28 +12,36 @@ namespace FreeHandGestureFramework
             _defaultBoneWeights = new float[GetBonesCount()];
             _defaultDeviations = new Deviation[GetBonesCount()];
         }
+        ///<value>The names of the individual bones.</value>
         protected string[] _boneNames;
-
+        ///<value>The default bone weights of the individual bones.</value>
         protected float[] _defaultBoneWeights;
+        ///<value>The default tolerance values of the individual bones.</value>
         protected Deviation[] _defaultDeviations;
+        ///<value>Returns the number of bones of a specific hand skeleton model.</value>
         public abstract int GetBonesCount();
+        ///<summary>Returns the standard tolerance used for a specific hand skeleton model.</summary>
         public abstract Deviation GetStandardDeviation();
+        ///<summary>Returns a copy of the default tolerance values of the individual bones.</summary>
         public Deviation[] GetDefaultDeviations()
         {
             Deviation[] devs = new Deviation[_defaultDeviations.Length];
             for(int j = 0; j< _defaultDeviations.Length; j++) devs[j]=new Deviation(_defaultDeviations[j]);
             return devs;
         }
-        public string[] GetBoneNames(){return _boneNames;}//TODO:copy array?
+        ///<summary>Returns the names of the individual bones.</summary>
+        public string[] GetBoneNames(){return _boneNames;}
+        ///<summary>Returns the default bone weights.</summary>
         public float[] GetDefaultBoneWeights(){return (float[]) _defaultBoneWeights.Clone();}
     }
 
-
+    ///<summary>The hand skeleton model for the Oculus Quest 1 and 2</summary>
     public class HandSkeletonOculusQuest: HandSkeletonBase
     {
         private Deviation StandardDeviation;
         public HandSkeletonOculusQuest(): base()
         {
+            //initialize bone names
             _boneNames[0] = "Hand_WristRoot";      // root frame of the hand, where the wrist is located
             _boneNames[1] = "Hand_ForearmStub";    // frame for user's forearm
             _boneNames[2] = "Hand_Thumb0";         // thumb trapezium bone
@@ -57,6 +67,7 @@ namespace FreeHandGestureFramework
             _boneNames[22] = "Hand_RingTip";       // tip of the ring finger
             _boneNames[23] = "Hand_PinkyTip";      // tip of the pinky
 
+            //initialize default bone weights
             _defaultBoneWeights[0] = 0.0f;
             _defaultBoneWeights[1] = 0.0f;
             _defaultBoneWeights[2] = 0.0f;
@@ -82,27 +93,30 @@ namespace FreeHandGestureFramework
             _defaultBoneWeights[22] = 1.0f;
             _defaultBoneWeights[23] = 1.0f;
 
-            StandardDeviation = new Deviation(0.0f, 0.04f, 2.0f); //TODO: experimentieren
+            //initialize deviations
+            StandardDeviation = new Deviation(0.0f, 0.04f, 2.0f);
 
             for (int i=0; i<GetBonesCount(); i++) _defaultDeviations[i] = GetStandardDeviation();
         }
-
+        ///<summary>Returns 24, the bone count for the Oculus Quest hand model.</summary>
         public override int GetBonesCount()
         {
             return 24;
         }
-
+        ///<summary>Returns the standard tolerance used for the oculus quest.</summary>
         public override Deviation GetStandardDeviation()
         {
             return new Deviation(StandardDeviation); 
         }
     }
 
+    ///<summary>The hand skeleton model for the Microsoft HoloLens 2</summary>
     public class HandSkeletonHoloLens2: HandSkeletonBase
     {
         private Deviation StandardDeviation;
         public HandSkeletonHoloLens2(): base()
         {
+            //initialize bone names
             _boneNames[0] = "Wrist";
             _boneNames[1] = "Thumb Metacarpal";
             _boneNames[2] = "Thumb Proximal";
@@ -129,6 +143,7 @@ namespace FreeHandGestureFramework
             _boneNames[23] = "Little Distal";
             _boneNames[24] = "Little Tip";
 
+            //initialize bone names
             _defaultBoneWeights[0] = 0.0f;
             _defaultBoneWeights[1] = 0.5f;
             _defaultBoneWeights[2] = 0.7f;
@@ -155,27 +170,30 @@ namespace FreeHandGestureFramework
             _defaultBoneWeights[23] = 0.8f;
             _defaultBoneWeights[24] = 1.0f;
 
-            StandardDeviation = new Deviation(0.0f, 0.04f, 2.0f); //TODO: experimentieren
+            //initialize deviations
+            StandardDeviation = new Deviation(0.0f, 0.04f, 2.0f);
 
             for (int i=0; i<GetBonesCount(); i++) _defaultDeviations[i] = GetStandardDeviation();
         }
-
+        ///<summary>Returns 25, the bone count for the HoloLens 2 hand model.</summary>
         public override int GetBonesCount()
         {
             return 25;
         }
-
+        ///<summary>Returns the standard tolerance used for the HoloLens2.</summary>
         public override Deviation GetStandardDeviation()
         {
             return new Deviation(StandardDeviation); 
         }
     }
 
+    ///<summary>The hand skeleton model for the HTC Vive Focus.</summary>
     public class HandSkeletonViveFocus: HandSkeletonBase
     {
         private Deviation StandardDeviation;
         public HandSkeletonViveFocus(): base()
         {
+            //initialize bone names
             _boneNames[0] = "Wrist";
             _boneNames[1] = "Thumb Metacarpal";
             _boneNames[2] = "Thumb Proximal";
@@ -198,6 +216,7 @@ namespace FreeHandGestureFramework
             _boneNames[19] = "Little Distal";
             _boneNames[20] = "Little Tip";
 
+            //initialize bone weights
             _defaultBoneWeights[0] = 0.0f;
             _defaultBoneWeights[1] = 0.5f;
             _defaultBoneWeights[2] = 0.7f;
@@ -220,16 +239,17 @@ namespace FreeHandGestureFramework
             _defaultBoneWeights[19] = 0.8f;
             _defaultBoneWeights[20] = 1.0f;
 
-            StandardDeviation = new Deviation(0.0f, 0.04f, 2.0f); //TODO: experimentieren
+            //initialize deviations
+            StandardDeviation = new Deviation(0.0f, 0.04f, 2.0f);
 
             for (int i=0; i<GetBonesCount(); i++) _defaultDeviations[i] = GetStandardDeviation();
         }
-
+        ///<summary>Returns 21, the bone count for the Vieve Focus hand model.</summary>
         public override int GetBonesCount()
         {
             return 21;
         }
-
+        ///<summary>Returns the standard tolerance used for the Vive Focus.</summary>
         public override Deviation GetStandardDeviation()
         {
             return new Deviation(StandardDeviation); 

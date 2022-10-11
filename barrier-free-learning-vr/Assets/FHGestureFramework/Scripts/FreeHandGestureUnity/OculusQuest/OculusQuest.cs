@@ -5,9 +5,12 @@ namespace FreeHandGestureUnity.OculusQuest
 {
     //The tools and classes in this namespace assume that you to have installed the
     //Oculus Integration Asset for Unity.
+    ///<summary>This static class contains methods to convert to or from Oculus Quest specific values.</summary>
     public static class ConversionToolsOQ
     {
 #if OCULUSQUEST
+        ///<summary>Converts an OVRSkeleton instance's bone data to a Vector3 array of local bone positions.</summary>
+        ///<param name="skeleton">The OVRSkeleton class containing the bone positions in world space.</param>
         internal static Vector3[] GetSkeletonBonesLocalSpace(OVRSkeleton skeleton)
         {
             if (skeleton == null || skeleton.Bones.Count == 0) return null;
@@ -22,7 +25,7 @@ namespace FreeHandGestureUnity.OculusQuest
 #endif
     }
 
-
+    ///<summary>This class with base class HandPoseU introduces a constructor taking an OVRSkeleton instance.</summary>
     public class HandPoseUOQ : HandPoseU
     {
 #if OCULUSQUEST
@@ -31,6 +34,7 @@ namespace FreeHandGestureUnity.OculusQuest
         public HandPoseUOQ(Vector3[] bones) : base(bones) {}
 #endif
     }
+    ///<summary>This class with base class HandPoseInWorldSpaceU introduces a constructor taking an OVRSkeleton instance.</summary>
     public class HandPoseInWorldSpaceUOQ : HandPoseInWorldSpaceU
     {
 #if OCULUSQUEST
@@ -40,6 +44,7 @@ namespace FreeHandGestureUnity.OculusQuest
         public HandPoseInWorldSpaceUOQ(Vector3[] bones, Transform worldCoords) : base(bones, worldCoords) {}
 #endif                   
     }
+    ///<summary>This class with base class WeightedHandPoseU introduces constructors taking OVRSkeleton instances.</summary>
     public class WeightedHandPoseUOQ : WeightedHandPoseU
     {
 #if OCULUSQUEST
@@ -56,6 +61,7 @@ namespace FreeHandGestureUnity.OculusQuest
 #endif
     }
 
+    ///<summary>This class with base class HandsU introduces a constructor taking two OVRSkeleton instances.</summary>
     public class HandsUOQ : HandsU
     {
 #if OCULUSQUEST

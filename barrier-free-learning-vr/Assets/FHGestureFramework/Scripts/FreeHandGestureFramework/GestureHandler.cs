@@ -4,6 +4,7 @@ using FreeHandGestureFramework.DataTypes;
 
 namespace FreeHandGestureFramework
 {
+    ///<summary>The facade of the Free Hand Gesture Framework, giving access to all of its functionality.</summary>
     public sealed class GestureHandler
     {
         //This is a thread-safe singleton class.
@@ -22,7 +23,7 @@ namespace FreeHandGestureFramework
             Initialize();
         }  
         
-        //The EVENTS which this class is able to raise
+        //The EVENTS GestureHandler is able to raise
         private event Delegates.FreeHandGestureEventHandler RaiseGestureRecognizedEvent; //Will be raised when any gesture is recognized
         private event Delegates.FreeHandGestureEventHandler RaiseGestureDwellingEvent; //Will be raised during each Update() if active stage of active gesture is dwelling
         private event Delegates.FreeHandGestureEventHandler RaiseGestureStartEvent; //Will be raised if the active gesture starts (after uninterrupted dwell time or instantly if there is no dwell time)
@@ -41,7 +42,7 @@ namespace FreeHandGestureFramework
             } 
         }
         ///<summary>If a gesture is active, ActiveGesture returns the index of the active gesture which can be
-        ///used wich the gesture list. If no gesture is active, -1 is returned.</summary>
+        ///used with the gesture list. If no gesture is active, -1 is returned.</summary>
         public int ActiveGesture {get; private set;}
         ///<summary>Returns the hand skeleton model of the current platform.</summary>
         public HandSkeletonBase HandSkeleton {get; private set;}
@@ -217,7 +218,7 @@ namespace FreeHandGestureFramework
         ///<summary>This method subscribes a listener method of type FreeHandGestureEventHandler to an
         ///event specified by type. The subscribed method will then be called if ANY of the gesture
         ///stages raises that event. E.g. if you add a listener method and set type to Recognized,
-        ///the listener will be called every time a gesture (or next gesture stage) is recognized.
+        ///the listener will be called every time a gesture stage is recognized.
         ///The listener will receive an instance of FreeHandAPIEventArgs, which contains all relevant data
         ///(e.g. gesture and stage index).</summary>
         ///<param name="type">The type of the event.</param>
@@ -300,6 +301,7 @@ namespace FreeHandGestureFramework
             }
             return null;
         }
+        ///<summary>Sets the currently performed gesture - if there is one - inactive.</summary>
         public void StopCurrentGesture()
         {
             if(ActiveGesture!=-1) StopGesture(new Hands(), DateTime.Now);
@@ -451,7 +453,7 @@ namespace FreeHandGestureFramework
                 case GestureEventTypes.StageTransition: RaiseGestureStageTransitionEvent?.Invoke(this, args); break;
                 case GestureEventTypes.Released: RaiseGestureReleasedEvent?.Invoke(this, args); break;
             }
-            //Let the active stage raise their events too
+            //Let the active stage raise its events too
             if (args.GestureIndex>=0 && args.GestureIndex<Gestures.Count && args.StageIndex>=0 && args.StageIndex < Gestures[args.GestureIndex].StageCount)
                 Gestures[args.GestureIndex].Stages[args.StageIndex].RaiseEvent(type, args);
         }

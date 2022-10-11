@@ -3,6 +3,8 @@ using UnityEngine;
 
 namespace FreeHandGestureUnity
 {
+    ///<summary>This static class offers tools to convert between values specific for Free Hand Gesture Framework
+    ///and the Unity engine.</summary>
     internal static class ConversionTools
     {
         internal static Position3D Vector3ToPosition3D(Vector3 vector)

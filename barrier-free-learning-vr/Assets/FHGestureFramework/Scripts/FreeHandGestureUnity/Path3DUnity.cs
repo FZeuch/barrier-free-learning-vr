@@ -3,6 +3,8 @@ using UnityEngine;
 
 namespace FreeHandGestureUnity
 {
+    ///<summary>This class uses UnityEngine.Vector3 instances in its Path attribute
+    ///instead of FreeHandGestureFramework.Path in its base class Path3D.</summary>
     public class Path3DU: Path3D
     {
         public new Vector3[] Path

@@ -4,11 +4,16 @@ using StandardTools;
 
 namespace FreeHandGestureFramework.DataTypes
 {
+    ///<summary>A vector with four components that is used to define three-dimensional physical rotations.</summary>
     public class RotationQuat
     {
+        ///<value>The X component</value>
         public float X;
+        ///<value>The Y component</value>
         public float Y;
+        ///<value>The Z component</value>
         public float Z;
+        ///<value>The W component</value>
         public float W;
         public RotationQuat() : this(0, 0, 0, 1 /*Quaternion identity*/) {}
         public RotationQuat(Quaternion q) : this(q.X, q.Y, q.Z, q.W) {}
@@ -58,6 +63,8 @@ namespace FreeHandGestureFramework.DataTypes
             return rotAroundYInWorldSpace * rotationInWorldSpace;
         }
 
+        ///<summary>Returns the Euler angle equivalent (the rotation around X, Y and Z axis) for this Quaternion,
+        ///like calculated by the UnityEngine.Quaternion.eulerAngles method.</summary> 
         public Position3D GetEulerAnglesLikeInUnity()
         {
             Position3D p = new Position3D (
@@ -69,7 +76,8 @@ namespace FreeHandGestureFramework.DataTypes
                 MathTools.PositiveModValue(MathTools.ToDegree(p.X),360), 
                 MathTools.PositiveModValue(MathTools.ToDegree(p.Y),360), 
                 MathTools.PositiveModValue(MathTools.ToDegree(p.Z),360));
-        }  
+        } 
+        ///<summary>Returns the Euler angle equivalent (the rotation around X, Y and Z axis) for this Quaternion.</summary> 
         public Position3D GetEulerAngles() 
         {
             Position3D angles = new Position3D();

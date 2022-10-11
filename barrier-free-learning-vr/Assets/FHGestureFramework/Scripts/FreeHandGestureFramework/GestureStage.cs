@@ -40,6 +40,8 @@ namespace FreeHandGestureFramework
         ///<value>Set RelHandsPosition, if both hands must be held in a specified position
         ///relative to each other for this stage to be recognized (e.g. right hand 10cm right of left hand, or right hand 10-20cm
         ///above left hand). The directions are considered in looking direction.
+        ///RelHandsPosition.RelativeVector defines the relative distance and direction from the left hand to the
+        ///right hand.
         ///RelHandsPosition is only evaluated during stage recognition if TwoHandedGesture is set to true.
         ///If both LeftHandPoses and RightHandPoses are empty, ONLY the relative positions and not the poses of
         ///each hand will be evaluated. If only one of them is empty, one hand position must
@@ -140,6 +142,7 @@ namespace FreeHandGestureFramework
             _dwellTime = orig._dwellTime;
             _releaseWaitingTime = orig._releaseWaitingTime;
         }
+        //The EVENTS GestureStage is able to raise
         private event Delegates.FreeHandGestureEventHandler RaiseStageRecognizedEvent;
         private event Delegates.FreeHandGestureEventHandler RaiseStageDwellingEvent;
         private event Delegates.FreeHandGestureEventHandler RaiseStageStartEvent;
@@ -165,27 +168,46 @@ namespace FreeHandGestureFramework
             get {return _releaseConfidence;}
             set {_releaseConfidence = MathTools.Clamp01(value);}
         }
-        private int _dwellTime = 0; //in milliseconds
+        private int _dwellTime = 0;
+        ///<value>The dwell time of a stage defines how many milliseconds must pass since the recognition of the stage
+        ///in order to "start" the stage. During dwell time, the recognition criteria must be met (e.g. the required
+        ///hand pose must be held). Otherwise, the stage is "released".</value>
         public int DwellTime
         {
             get {return _dwellTime;}
             set {_dwellTime = MathTools.Positive(value);}
         }
-        private int _releaseWaitingTime = 0; //in milliseconds
+        private int _releaseWaitingTime = 0; 
+        ///<value>The time in milliseconds that must pass before the stage can be released.</value>
         public int ReleaseWaitingTime
         {
             get {return _releaseWaitingTime;}
             set {_releaseWaitingTime = MathTools.Positive(value);}
         }
+        ///<value>The time stamp of the recognition of this stage.</value>
         [XmlIgnore]
         public DateTime StageRecognitionTime {get; internal set;} = DateTime.MinValue;
+        ///<summary>Checks if the TransitionCondition specified in the condition parameter
+        ///will be checked during GestureHandler.Update()</summary>
+        ///<param name="condition">The transition condition.</param>
         public bool CheckTransitionCondition(TransitionCondition condition) {return TransitionConditions[(int)condition];}
+        ///<summary>Returns the index of the destination stage for the specified TransitionCondition,
+        ///or -1 if no target stage is defined (which means the gesture will stop if
+        ///the specified transition condition is met)</summary>
+        ///<param name="condition">The transition condition.</param>
         public int GetNextStageIndex(TransitionCondition condition) {return TransitionTo[(int)condition];}
+        ///<summary>Defines if the TransitionCondition specified in the condition parameter
+        ///will be checked during GestureHandler.Update()</summary>
+        ///<param name="condition">The transition condition.</param>
         public void SetTransitionCondition(TransitionCondition condition, bool val, int destinationStage) 
         {
             TransitionConditions[(int)condition]=val;
             TransitionTo[(int)condition] = destinationStage;
         }
+        ///<summary>Returns a value between 0 and 1, that represents the degree of accordance between
+        ///the current user hands and the hand poses/hand positions defined for this stage. A value of 1 means a perfect match. </summary>
+        ///<param name="handsToCompare">The current user hands.</param>
+        ///<param name="lookingDirection">The vector of the looking direction.</param>
         public float Confidence(Hands handsToCompare, Position3D lookingDirection=null)
         {
             //1.If both hand poses are empty:
@@ -322,11 +344,16 @@ namespace FreeHandGestureFramework
         }
 
         ///<summary>This method subscribes a listener method of type FreeHandGestureEventHandler to an
-        ///event specified by type. The subscribed method will then be called if the gesture stage
+        ///event specified by type. The subscribed method will then be called when the gesture stage
         ///raises that event. E.g. if you add a listener method and set type to Recognized,
         ///the listener will be called at the time the gesture stage was recognized.
+        ///Calling this method on a specific stage has the same effect as calling
+        ///AddEventListener(GestureEventTyoes, FreeHandGestureEventHandler, int, int) in GestureHandler
+        ///with the corresponding gestureIndex and stageIndex values.
         ///NOTE: You may consider adding event listeners to the GestureHandler instance instead of different
         ///gesture stages. In that case, the listener method would be called if ANY stage was recognized.</summary>
+        ///<param name="type">The event type the listener method should be subscribed to.</param>
+        ///<param name="listener">The callback function.</param>
         public void AddEventListener (GestureEventTypes type, Delegates.FreeHandGestureEventHandler listener)
         {
             switch (type)
@@ -340,6 +367,9 @@ namespace FreeHandGestureFramework
             }
         }
 
+        ///<summary>Removes the specified event listener.</summary>
+        ///<param name="type">The event type from which the listener method should be removed.</param>
+        ///<param name="listener">The listener that should be removed.</param>
         public void RemoveEventListener (GestureEventTypes type, Delegates.FreeHandGestureEventHandler listener)
         {
             switch (type)
@@ -352,7 +382,11 @@ namespace FreeHandGestureFramework
                 case GestureEventTypes.Released: RaiseStageReleasedEvent -= listener; break;
             }
         }
-
+        ///<summary>Returns a three dimensional position that represents the hand position of a hand in world space.
+        ///The exact skeleton bone that is used can be defined in LeftManipulationBone and RightManipulationBone.
+        ///If these are not defined, the center of the bounding box around the hand is used as the hand position.</summary>
+        ///<param name="pose">The hand pose for which the hand position is calculated.</param>
+        ///<param name="left">Set true, if the pose parameter is a left hand pose. Set false, if it is a right hand pose.</param>
         public Position3D GetHandPosition(HandPoseInWorldSpace pose, bool left=false)
         {
             if (pose==null || pose.Bones==null || pose.Bones.Length == 0) return null;
@@ -368,7 +402,7 @@ namespace FreeHandGestureFramework
                 if(p.Y<ymin) ymin=p.Y; else if(p.Y>ymax) ymax=p.Y;
                 if(p.Z<zmin) zmin=p.Z; else if(p.Z>zmax) zmax=p.Z;
             }
-            return pose.Position+new Position3D(xmin+(xmax-xmin)/2, ymin+(ymax-ymin)/2, zmin+(zmax-zmin)/2);//TODO:test
+            return pose.Position+new Position3D(xmin+(xmax-xmin)/2, ymin+(ymax-ymin)/2, zmin+(zmax-zmin)/2);
         }
 
         internal void RaiseEvent(GestureEventTypes type, FreeHandEventArgs args)
@@ -386,6 +420,8 @@ namespace FreeHandGestureFramework
 
         private float Confidence(WeightedHandPose gesturePose, HandPoseInWorldSpace comparePose, Position3D lookingDirection)
         {
+            //Calculates confidence for a single WeightedHandPose.
+
             float totalWeight = 0.0f;
             int boneCount = gesturePose.Bones.Length;
             for (int i=0; i<boneCount; i++) totalWeight += gesturePose.BoneWeights[i];
